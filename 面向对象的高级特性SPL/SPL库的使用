@@ -1,0 +1,31 @@
+SPL库的使用(PHP标准库)php数据结构的封装
+	SPLStack(栈 push|pop)、
+	SplQueue(队列 enqueue|dequeue)、
+	SplMinHeap(堆始终保持小的在前 insert|extract)、
+	SplHeap(堆的主要功能)、
+	SplfixedArray(固定数组的长度 array = new ;$array[])。等数据结构类
+
+	代码示例
+	$stack = new SplStac();
+	$stack->push('data1');
+	$stack->push('data2');
+
+	echo $stack->pop();
+
+
+
+
+
+	arrayiterator	=>	迭代器
+	appendIterator	=>	迭代器
+	countable		=>	类实现 Countable 可被用于 count() 函数.
+	
+
+
+
+
+
+
+
+
+

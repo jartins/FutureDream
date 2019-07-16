@@ -1,0 +1,205 @@
+elasticsearch使用：   TCP端口是9300    HTTP端口是9200
+	优点
+		1. Apache Lucene构建
+		2. java编写提供简单易用的restful API
+		3. 轻松的横向扩展，可支持PB级别的结构化与非结构化数据处理(加机器)
+
+	场景
+		4. 海量数据分析引擎(假设有tp活pb的日志或指标数据时 可以使用es的聚合搜索功能 而不用花费大量的精力设计新的系统)
+		5. 站内搜索引擎
+		6. 可以当做数据仓库(可以存储tb pb级别的应用 可存储结构化与非结构化的数据)
+
+	环境要求
+		1. Maven 、 NodeJs(6.0以上)
+
+	单实例安装与启动
+		1. 官网下载、 
+		2. sh ./bin/elasticsearch
+
+	安装插件
+		1. header-master：可以解决友好的界面显示、基本信息的查看、rest请求的模拟、数据的基本检索(github elastsearch-head)
+
+	分布式安装
+		配置yml slave 
+
+
+	基础概念
+		索引：还有相同属性的文档集合
+		类型：索引可以定义一个或多个类型，文档必须属于一个类型
+		文档：文档是可以被索引的基本数据单位
+
+		和索引相关的有两个高阶的概念：	
+			1. 分片 每个索引都有多个分片，每个分片是一个Lucene索引
+
+			2. 备份 拷贝一份分片就完成了分片的备份
+
+				为什么出现分片和备份？ 
+					分片：因为一个索引要是很大 他就会对硬盘的压力很大 同时搜索的速度也会出现瓶颈 那么就可以将索引分成多个分片 从而分担压力 分片的过程中还允许用户进行水平的扩展和拆分以及分布式的操作 可以提高搜索以及其他操作的效率
+
+					备份：当一个主分片失败或者出现问题时，备份的分片就可以代替操作 从而提高了es的可用性 备份的分片还可以执行搜索的操作 以分担搜索的压力 
+
+					ES在创建索引时默认创建5个分片 一份备份 这个可以修改。分片的数量只能在创建索引的时候指定 而不能在后期进行修改 备份是可以修改的
+
+
+一、索引创建
+	127.0.0.1:9200/people     [post]
+	{
+		"setting" :{					// 指定索引的配置
+			"number_of_shards"	:	3,	// 索引的分片数
+			"number_of_replicas":	1	// 索引的备份数
+		}
+		"mappings":{					// 索引的映射定义
+			"main":{					// 类型
+				"properties" : {		// 属性做定义
+					"name" : {			// 名字
+						"type" : "text"	// 类型
+					},
+					"country":{			// 国家
+						"type" : "keyword"//不可切分的
+					},
+					"age"	 :{
+						"type" : "integer"//
+					},
+					"date"	: {
+						"type" : "date",
+						"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis" // 格式
+					}
+				}
+			}
+		}
+	}
+
+
+二、插入
+	使用postman 添加数据 ID是随机不重复的
+
+三、修改	
+	直接修改文档
+		127.0.0.1:9200/people/man/1/_update			POST
+		{
+			"doc" : {					// 修改此处必须是doc
+				"name" : "修改的数据"
+			}
+		}
+
+	脚本修改文档  POST
+		{
+			"script" : {
+				"lang" : "painless"		// 内置的脚本语言painless、js、Python等等
+				"inline": "ctx._source.age += 10"			// ctx 代表上下文、 _source代表es当前的文档、 age年龄在基础上加10 
+			}
+		}
+		{
+			"script" : {
+				"lang" : "painless"		// 内置的脚本语言painless、js、Python等等
+				"inline": "ctx._source.age = params.age",			// 写在外面
+				"params": {
+					"age" : 100
+				}
+			}
+		}
+
+四、删除
+	删除文档 
+		127.0.0.1:9200/people/man/1		 DELETE
+	删除索引
+		使用 head 图形化的删除
+		使用 postman 删除索引
+			127.0.0.1:9200/people
+			返回："acknowledged":true 表示删除索引成功
+
+		elasticsearch是基于Apache Lucene构建的开源搜索引擎(Lucene本身就是一款开源搜索引擎 但是相对复杂)
+
+
+五、查询
+	GET	 	127.0.0.1:9200/book/content/1
+	POST 	127.0.0.1:9200/book/_search
+		body json
+		{
+			"query":{
+				"matcha_all" : {}	// 查询所有
+			}
+		}							// 返回结果中 took(接口响应花费的时间/毫秒)	hits(返回的结果)
+
+		body json
+		{
+			"query":{
+				"match" : {						// 带条件是match
+					"title" : "Elasticsearch"	// 添加搜索的条件
+				}	
+			},
+			"sort" :{
+				{"publish_date" : {"order" : "desc"}}	// 自定义自己的排序
+			}
+		}							// 返回结果中 took(接口响应花费的时间/毫秒)	hits(返回的结果)
+
+
+	五.1、聚合查询('aggs'关键词)
+		{
+			"aggs" : {
+				"group_by_word_count" : {	// 聚合字数
+					"terms" : {
+						"field" : "word_count"
+					}
+				},
+				"group_by_publish_date": {	// 聚合日期
+					"terms" : {
+						"field" : "publish_date"
+					}
+				}
+			}
+		}		
+		⤴️⤴️⤴️⤴️⤴️⤴️⤴️⤴️⤴️ 返回的结果是 分别count或date 数产物数量
+
+		{
+			"aggs" : {
+				"grades_word_count" : {	// 聚合字数
+					"stats" : {
+						"field" : "word_count"	// 返回最小 最大 平均 字数
+					}
+				}
+			}
+		}
+
+		{
+			"aggs" : {
+				"grades_word_count" : {	// 聚合字数
+					"min" : {
+						"field" : "word_count"	// 返回最小
+					}
+				}
+			}
+		}
+
+
+
+
+
+高级查询
+	子条件查询(叶子条件查询)
+		特定字段查询所指定值
+		分为：Query context、 Filter context
+		range 范围、 term 结构化数据字段
+
+	复合条件查询
+		以一定的逻辑组合子条件查询
+		固定分数查询
+
+		布尔查询
+			must是一种and的组合关系
+			should是一种or的组合关系
+		...
+
+
+
+
+
+
+
+
+
+
+
+
+
+

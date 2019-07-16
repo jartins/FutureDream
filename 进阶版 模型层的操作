@@ -1,0 +1,129 @@
+一、ThinkPHP5 数据库操作
+	连接数据库的四种方式
+		方法1.use Db;	Db::connect()	// 配置信息为单一的 单连接 单库
+		方法2.use Db;	Db::connect(['写入配置的信息'])	// 个性定制连接信息
+		方法3.use Db; 	Db::connect('db_conf_01');		// 个性的定制连接信息 名称为配置新库的键 在config中写入
+
+	数据库查询操作
+				/**
+				 * 查询方式 运用Db查询 站位符
+				 * Db:: 是单例模式的实例化
+				 * 
+				 * Db::query('原生SQL查询语句') 					返回结果是数组
+				 * Db::execute('插入语句预处理 insert into tablename set 字段=?',[字段])
+				 * Db::table('表名需要写前缀')->where(['条件字段'=>'条件字段值'])->select();
+				 * Db::table('表名需要写前缀')->find()						返回一条数据
+				 * Db::table('表名需要写前缀')->value('字段')				只能返回一条字段的数据
+				 * Db::table('表名需要写前缀')->column('字段','字段2')		返回多列 超过第二个 第一个为键
+				 * Db::name('表名无需写表前缀')->select();
+				 * db('exam', [], false)->select();				// 启用助手的单例模式
+				 */
+				// $res = Db::query('select * from exam where id =?',[1]);
+
+				// $res = Db::execute('insert into exam set username=?,userpwd=?,email=?',[
+				// 	'liconghui',md5('imooc'),'2548467693@qq.com'
+				// ]);
+
+				// $res = Db::table('exam')->where(['id'=>1])->select();
+				
+				// $res = Db::table('exam')->where(['id'=>1])->find();
+				
+				// $res = Db::table('exam')->value('username');		// 只能返回列中的一个值
+				
+				// $res = Db::table('exam')->column('username,userpwd');
+
+				// $res = Db::name('exam')->select();				// 无需写表前缀
+
+				// $res = db('exam')->select();						// 不是单例模式 每次使用助手会实例化
+
+				// $res = db('exam', [], false)->select();				// 启用助手的单例模式
+
+				dump($res);
+
+
+
+	2. 数据库添加数据
+		use think\Db; $res = Db::table(表);		
+			插入单条返回影响行数
+				$result = $res->insert(['k'=>'v']);
+
+			插入单条返回插入的ID占位
+				$result = $res->insertGetId(['k'=>'v']);
+
+			一次性插入多条的数据	返回的数据是影响的行数
+				$result = $res->insertAll($data);
+
+
+	3. 数据库的更新操作
+		对于数据库的更新操作有三中方法
+		方法1. update
+			$res->where([条件])->update(['字段'=>'更新之后的值']);
+
+		方法2. setField	只更新一列
+			$res->where([条件])->setField('字段','新值');
+
+		方法3. setInc('字段','步长'); 在原有的基础上自增
+
+		方法4. setDec('字段','步长');	在原有的基础上自减
+
+	4. 数据库删除操作
+		方法1. $res->where([条件])->delete();
+
+		方法2. $res->delete(如果是主键自增的id 可以不加where条件 直接将主键的id放入即可)
+
+	
+
+	5. 条件构造器 
+		方法1. in查询
+			$res->where('id','in',23,32,22,2333)->buildSql();		// 参数可以传入数组格式
+
+		方法2. 
+		/**
+		 * 关于调价构造器
+		 * GT 	>
+		 * ET 	=
+		 * EGT 	>=
+		 * LT 	<
+		 * ELT 	<=
+		 * BETWEEN	BETWEEN * and *
+		 * NOTBETWEEN NOTBETWEEN * and * 
+		 * IN IN (*,*);
+		 * NOTIN NOT IN(*,*);
+		 */
+		// $result = $res->where('id','IN',[2,5])->buildSql();
+		
+		// $result = $res->where([				// and 方式实现 第一种
+		// 	'id'	=>	['in',[1,2,3,4]],
+		// 	'username'=>'21312',
+		// ])->buildSql();
+
+		// $result = $res->where('id','IN',[2,5])->where('id','IN',[2,5])->buildSql();	// and 方式实现 第二种
+
+		// or 方法的展现
+		$result = $res->where('id','in',1321,321,321)->whereOr('username','hudasd')->buildSql();
+
+		// $result = $res->where('id','EXP','in 23,32,33')->buildSql();	// 自定义 EXP
+		dump($result);
+
+
+	6. 链式操作
+		
+
+
+
+
+
+
+
+
+
+二、Thinkphp5 模型
+	thinkphp的模型是对DB又一次的封装，让我们使用起来更加得心应手
+
+
+
+
+
+
+
+

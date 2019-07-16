@@ -1,0 +1,246 @@
+一、如何在子查询中匹配两个值
+	mysql子查询的使用场景及其好处
+
+		1、什么是子查询？
+			当一个查询是另一个查询的条件时，称之为子查询(可以在curd中)
+
+		2、常见的子查询使用场景
+			（写在前面，一般都选择用连接来替换子查询，因为子查询的性能不好）
+			使用子查询可以避免由于子查询中的数据产生的重复
+
+	最简单的子查询示例（单列）
+		1、mysql> select user_name from a where id in (select user_id from c);
+			+-----------+
+			| user_name |
+			+-----------+
+			| 唐僧      |
+			| 孙悟空    |
+			| 猪八戒    |
+			| 沙悟净    |
+			+-----------+
+			4 rows in set (0.00 sec)
+							------ 子查询查出的值是没重复的 （不明白看下面的示例）
+		2、mysql> select * from c;
+			+----+---------+-------------+-------+
+			| id | user_id | timestr     | kills |
+			+----+---------+-------------+-------+
+			|  1 |       2 | 2013-01-10  |    10 |
+			|  2 |       2 | 2013-01-01  |     2 |
+			|  3 |       2 | 2013-01-05  |    12 |
+			|  4 |       4 | 2013-01-10  |     3 |
+			|  5 |       4 | 2013-01-11  |     5 |
+			|  6 |       3 | 2013-01-06  |     1 |
+			|  7 |       3 | 2013-01-11  |    20 |
+			|  8 |       1 | 2013-01-12  |    10 |
+			|  9 |       1 | 2013-01-07  |    17 |
+			+----+---------+-------------+-------+
+			9 rows in set (0.00 sec)
+							------- ID 出现了多次 但是子查询之后多个id只有一个结果名
+
+
+		以上情况阐明了子查询不会重复出现值得情况 下面写出连接查询的结果显示
+		3、mysql> select a.user_name from a join c on a.id = c.user_id;
+			+-----------+
+			| user_name |
+			+-----------+
+			| 孙悟空    |
+			| 孙悟空    |
+			| 孙悟空    |
+			| 沙悟净    |
+			| 沙悟净    |
+			| 猪八戒    |
+			| 猪八戒    |
+			| 唐僧      |
+			| 唐僧      |
+			+-----------+
+			9 rows in set (0.00 sec)
+							------- 明显 连接查询出现的结果是有重复的，但是为了达到与子查询同等的情况 在连接查询的情况下使用 distinct 来实现去重 下面是示例
+			连接实现去重的结果方法
+		4、mysql> select distinct a.user_name from a join c on a.id = c.user_id;
+			+-----------+
+			| user_name |
+			+-----------+
+			| 孙悟空     |
+			| 沙悟净     |
+			| 猪八戒     |
+			| 唐僧       |
+			+-----------+
+			4 rows in set (0.00 sec)
+
+		5、使用子查询更符合语意，更好理解
+
+		6、总结：子查询的结果是可以避免因子查询的重复而重复的，而子查询的效率不高，采用连接之后需要用distinc	t就能达到去重同样的效果
+			在将子查询转换为连接查询时一定要注意数据之间是一对多还是多对一的关系，如果是一对多或者多对一 一定要对结果集进行去重处理 才能达到结果
+
+
+
+	如何在子查询中实现多列过滤（多列）
+		1、需求是 查询出每一个取经人打怪最多的日期，并列出取经人的姓名，打怪最多ed日期和打怪的数量
+		mysql> select user_id,max(kills) as nums from c group by user_id;
+			+---------+------+
+			| user_id | nums |
+			+---------+------+
+			|       1 |   17 |
+			|       2 |   12 |
+			|       3 |   20 |
+			|       4 |    5 |
+			+---------+------+
+			4 rows in set (0.00 sec)
+							----- 运用max查询出了不同id击杀怪物最多的id与个体击杀的数量
+
+		2、mysql> select a.user_name,c.timestr,c.kills from a join c on a.id = c.user_id join (select user_id,max(kills) as cnt from c group by user_id) c on c.user_id = c.user_id and b.kills = c.cnt;
+			+-----------+------------+-------+
+			| user_name | timestr    | kills |
+			+-----------+------------+-------+
+			| 孙悟空     | 2013-01-05 |    12 |
+			| 沙悟净     | 2013-01-11 |     5 |
+			| 猪八戒     | 2013-01-11 |    20 |
+			| 唐僧       | 2013-01-07 |    17 |
+			+-----------+------------+-------+
+			4 rows in set (0.00 sec)
+							----- 查询出每个人打怪最多的日期
+
+
+	多列过滤的使用场景
+		MySQL中独有的多列过滤方式(其中的where就是过滤)
+			mysql> select a.user_name,c.timestr,c.kills from a join c on a.id = c.user_id where(c.user_id,c.kills) in (select user_id,max(kills) from c group by user_id);
+			+-----------+------------+-------+
+			| user_name | timestr    | kills |
+			+-----------+------------+-------+
+			| 孙悟空     | 2013-01-05 |    12 |
+			| 沙悟净     | 2013-01-11 |     5 |
+			| 猪八戒     | 2013-01-11 |    20 |
+			| 唐僧       | 2013-01-07 |    17 |
+			+-----------+------------+-------+
+			4 rows in set (0.00 sec)
+
+
+二、解决同属性多值过滤的问题
+	建立一个新的表结构 填充数据
+		mysql> select * from d;
+		+----+-----------+-----------+-------------+
+		| id | user_name | skill     | skill_level |
+		+----+-----------+-----------+-------------+
+		|  1 | 唐僧       | 紧箍咒     |           5 |
+		|  2 | 唐僧       | 打坐       |           4 |
+		|  3 | 唐僧       | 念经       |           5 |
+		|  4 | 唐僧       | 变化       |           0 |
+		|  5 | 猪八戒     | 变化       |           4 |
+		|  6 | 猪八戒     | 腾云       |           3 |
+		|  7 | 猪八戒     | 浮水       |           5 |
+		|  8 | 猪八戒     | 念经       |           0 |
+		|  9 | 猪八戒     | 紧箍咒      |           0 |
+		| 10 | 孙悟空     | 变化       |           5 |
+		| 11 | 孙悟空     | 腾云       |           5 |
+		| 12 | 孙悟空     | 浮水       |           3 |
+		| 13 | 孙悟空     | 念经       |           2 |
+		| 14 | 孙悟空     | 请神       |           5 |
+		| 15 | 沙僧       | 变化       |           2 |
+		| 16 | 沙僧       | 腾云       |           2 |
+		| 17 | 沙僧       | 浮水       |           4 |
+		| 18 | 沙僧       | 念经       |           4 |
+		| 19 | 沙僧       | 紧箍咒     |           1 |
+		| 20 | 孙悟空     | 紧箍咒     |           0 |
+		+----+-----------+-----------+-------------+
+		20 rows in set (0.00 sec)
+
+	什么是同一属性多值过滤？
+
+
+	如何查询出同时具有 变化 和 念经 同时level大于0的人
+		mysql> select a.user_name,b.skill,c.skill from user1 a join user1_skills b on a.id = b.user_id and b.skill='念经' join user1_skills c on c.user_id = b.user_id and c.skill = '变化' where b.skill_level > and c.skill_level > 0;
+
+	使用join查询		
+		mysql> select a.user_name,b.skill,c.skill,d.skill from user1 a join user1_skill b on a.id = b.user_id and b.skill = '念经' join user1_skills c on c.user_id = b.user_id and c.skill = '变化' join user1_skills d on d.user_id = c.user_id and d.skill='腾云' where b.skill_level > 0 and c.skill_level > 0 and d.skill_level > 0;
+
+
+		mysql> select a.user_name,b.skill,c.skill,d.skill,e.skill from user1 a left join user1_skill b on a.id = b.user_id and b.skill = '念经' and b.skill_level > 0 left join user1_skill c on a.id = c.user_id and c.skill = '变化' and s.skill_level > 0 left join user1_skill d on a.id = d.user_id and d.skill = '腾云' and d.skill_level > 0 left join user1_skill e on a.id = e.user_id and e.skill = '浮水' and e .skill_level > 0;
+
+
+		mysql> select a.user_name,b.skill,c.skill,d.skill,e.skill from user1 a left join user1_skill b on a.id = b.user_id and b.skill = '念经' and b.skill_level > 0 left join user1_skill c on a.id = c.user_id and c.skill = '变化' and s.skill_level > 0 left join user1_skill d on a.id = d.user_id and d.skill = '腾云' and d.skill_level > 0 left join user1_skill e on a.id = e.user_id and e.skill = '浮水' and e .skill_level > 0 where (case when b.skill is not null then 1 else 0 end)
+								+(case when c.skill is not null then 1 else 0 end)
+								+(case when d.skill is not null then 1 else 0 end)
+								+(case when e.skill is not null then 1 else 0 end) >= 2;
+
+	使用Group by 实现多属性查询   遇到多属性选择取决一属性可以使用group by
+		group by 应用于分组，对同一组合进行一个分组和排列组合
+		select a.user_name form user1 a join user1_skills b on b.user_id = a.id where b.skill in ('念经','变化','腾云','浮水') and b.skill_level > 0 group by a.user_name having count(*) >= 2;
+
+
+
+
+
+
+
+三、如何计算累进税的问题
+	什么是累进税？ 
+		累进税就是不同的基数使用不同的比率。比如个人所得税
+	使用SQL计算个人所得税
+		表1
+			mysql> select * from a;
+			+----+-----------+-----------------+----------+
+			| id | user_name | over            | money    |
+			+----+-----------+-----------------+----------+
+			|  1 | 唐僧       | 旃檀功德佛       | 35000.00 |
+			|  2 | 孙悟空     | 净坛使者         | 28000.00 |
+			|  3 | 猪八戒     | 斗战神佛         | 15000.00 |
+			|  4 | 沙悟净     | 金身罗汉         | 8000.00  |
+			+----+-----------+-----------------+----------+
+			4 rows in set (0.00 sec)
+		表2
+			mysql> select * from tax;
+			+----+----------+--------------+--------+
+			| id | low      | high         | rate   |
+			+----+----------+--------------+--------+
+			|  1 | 0.00     | 1500.00      | 3.00%  |
+			|  2 | 1500.00  | 4500.00      | 10.00% |
+			|  3 | 4500.00  | 9000.00      | 20.00% |
+			|  4 | 9000.00  | 35000.00     | 25.00% |
+			|  5 | 35000.00 | 55000.00     | 30.00% |
+			|  6 | 55000.00 | 80000.00     | 35.00% |
+			|  7 | 80000.00 | 999999999.00 | 45.00% |
+			+----+----------+--------------+--------+
+			7 rows in set (0.00 sec)
+
+
+	如何计算累进税
+		可以使用join实现工资对不同纳税区间的匹配
+			mysql> select a.user_name,money,low,high,rate from a join tax b on a.money > b.low order by user_name; 
+			+-----------+----------+----------+----------+--------+
+			| user_name | money    | low      | high     | rate   |
+			+-----------+----------+----------+----------+--------+
+			| 唐僧       | 35000.00 | 0.00     | 1500.00  | 3.00%  |
+			| 唐僧       | 35000.00 | 1500.00  | 4500.00  | 10.00% |
+			| 孙悟空     | 28000.00 | 0.00     | 1500.00  | 3.00%  |
+			| 孙悟空     | 28000.00 | 1500.00  | 4500.00  | 10.00% |
+			| 沙悟净     | 8000.00  | 0.00     | 1500.00  | 3.00%  |
+			| 沙悟净     | 8000.00  | 35000.00 | 55000.00 | 30.00% |
+			| 沙悟净     | 8000.00  | 1500.00  | 4500.00  | 10.00% |
+			| 沙悟净     | 8000.00  | 55000.00 | 80000.00 | 35.00% |
+			| 沙悟净     | 8000.00  | 4500.00  | 9000.00  | 20.00% |
+			| 猪八戒     | 15000.00 | 1500.00  | 4500.00  | 10.00% |
+			| 猪八戒     | 15000.00 | 0.00     | 1500.00  | 3.00%  |
+			+-----------+----------+----------+----------+--------+
+			11 rows in set (0.00 sec)
+						------	显示匹配薪资区间
+
+			使用LEAST函数取得区间内最小的数据
+				拓展知识网址 https://www.yiibai.com/mysql/greatest-least.html
+				LEAST()函数是GREATEST()函数的相反函数。其目的是为了从列表值返回至少值项(N1，N2，N3，等等)。下面的例子显示了LEAST()函数适当的使用和输出：	
+					l>SELECT LEAST(3,5,1,8,33,99,34,55,67,43);
+					+---------------------------------------------------------+
+					| LEAST(3,5,1,8,33,99,34,55,67,43)                        |
+					+---------------------------------------------------------+
+					| 1                                                       |
+					+---------------------------------------------------------+
+					1 row in set (0.00 sec)
+
+
+			列出所有范税额校价
+			mysql> select a.user_name,a.money,b.low,b.high,least(a.money-b.low,b.high-b.low) as curmoney,rate from a join tax b on a.money>b.low order by user_name,low;
+
+
+
+			结果写法
+			mysql> select user_name,sum(curmoney*rate) from (select user_name,money,low,high,least(money-low,high-low) as curmoney,rate from a join tax b on a.money > b.low) a group by user_name;
+

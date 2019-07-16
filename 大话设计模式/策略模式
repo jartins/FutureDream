@@ -1,0 +1,92 @@
+策略模式
+	定义: 策略模式，将一组特定的行为和算法封装成类，以适应某些特定的上下文环境，这种模式就是策略模式
+	定义：策略模式 写法主要是为了符合 设计模式的 开闭原则OCP (open closed principle): 类,函数,模块 对扩展开放, 对修改关闭.策略模式具体说就是 当需求变化时, 不要修改原有代码, 而是写新的扩展.
+
+	实际应用举例，假如一个电商网站系统，针对男性女性用户要跳转到不同的商品类目，并且所有广告位展示不同广告(常规的做法是使用if else进行判断 这是一种硬编码的方式) 要灵活的应用(假如此时再加入一条条件就会出现不可估量的问题)
+
+
+
+	使用策略模式可以实现IOC、依赖倒置、控制反转
+
+
+
+	代码思路
+		创建 interface
+		创建 男 相同方法的不同结果
+		创建 女 相同方法的不同结果
+		创建 首页 
+		在首页 类外 调用 已完成接口实现的类 
+		在首页 类外 实例化首页 判断 男与女 分别实例化 不同的类(男|女) 将实例结果放入受保护的属性中
+
+	部分代码思路
+	class Test{
+		protected $strategy;
+		function index(){
+			$result = $this->strategy;
+			echo $result->AD();
+			echo $result->INFO();
+		}
+		function setStrategy(\namespace\nmspc接口 $strategy){
+			$this->strategy = $strategy;
+		}
+	}
+	$obj = new Test;
+	if($_GET['sex']=='MALE'){
+		$Strategy = \namespace\男
+	}else{
+		$Strategy = \namespace\女
+	}
+	$obj->setStrategy($Strategy);
+	$obj->index();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

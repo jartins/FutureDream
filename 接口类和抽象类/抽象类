@@ -1,0 +1,51 @@
+抽象类(abstruct)
+	定义：定义接口在接口中实现了部分的方法			{抽象类的定义方是 abstract class 类名 {}    }
+	代码示例
+	abstract class AB{
+		function holiday(){
+			echo "这是抽象类的测试";
+		}
+		function eat(){}					{抽象类内的方法 必须要空实现‘加大括号’且不用加分号结尾}
+		function sleep(){}
+	}	
+	class Test extends AB{
+		function eat(){
+			echo "吃饭";
+		}
+		function sleep(){
+			$this->holiday();
+			echo "睡觉";
+		}
+	}
+	$result = new Test();
+	$result->eat();
+	$result->sleep();
+
+
+
+
+	
+
+
+	
+
+
+	
+
+
+	
+
+
+	
+
+
+	
+
+
+	
+
+
+	
+
+
+	

@@ -1,0 +1,195 @@
+优化网站
+	定时的清理日志文件、定时的备份源码、
+
+
+
+什么是CRONTAB？
+	crontab是一个用于设置周期性执行任务的工具
+
+为什么要使用crontab？
+	定时任务 兼容linux任何版本
+	1.每分钟需要执行一个脚本进行系统Health Check
+	2.每天凌晨对过去的一天系统数据进行统计
+	3.每周对系统日志进行备份切割
+	4.每个月对系统关键数据进行备份
+
+Crontab入门	（本章主要介绍Crontab的简单的应用操作，包括安装配置，简单指令，环境变量等。）
+	1.安装crond服务和crontab工具(CentOS7)
+		yum clean all									// 清理yum包
+		yum	update										// 更新yum
+		yum install -y cronie crontabs					// yum安装crontab
+
+	2.验证crond服务和crontab工具
+		yum list cronie && systemctl status crond		//检查crond服务是否安装及启动 active (running)表示启动成功
+
+		# yum list crontabs && which crontab && crontab -l
+		/usr/bin/crontab
+		====== 此处显示任务 如果为空则没有任务	 ======
+		[root@izwz9a8nvld17yl14m2373z /]#
+
+	3.文件（按照格式编写定时任务） =》  解析(crontab工具) =》 守护进程
+	
+		分	时	日	月	周
+			my Command (执行的命令或脚本 可以是shell Python php java 只要是可执行文件就可以)
+
+		[root@izwz9a8nvld17yl14m2373z /]# crontab -e			// 登录crontab的表单
+		[root@izwz9a8nvld17yl14m2373z /]# crontab -l 			// 查看定时的任务
+		* * * * * my command
+		[root@izwz9a8nvld17yl14m2373z /]# systemctl restart crond // 重启	
+		[root@izwz9a8nvld17yl14m2373z /]# systemctl status crond  // 查看是否运行
+
+	4.crontab文件格式
+		分		时		日		月		周				My Command
+		0~59	0~23	1~31	1~12	0~6				要执行的命令或脚本
+
+		字符含义
+			*	代表所有的数字(时间)
+			/	代表每(每N时长时间执行)
+			-	代表区间
+			,	代表单个的两个时间个体
+		注意：一行一个任务
+
+	5.案例	每分钟打印一行shell输出并写入文件
+		[root@izwz9a8nvld17yl14m2373z /]# crontab -e
+		[root@izwz9a8nvld17yl14m2373z ~]# crontab -l
+		* * * * * echo -e "This is a test output" > /root/test.out
+		↑↑↑↑↑↑↑↑ 表示每分钟输出内容 存储在root/test.out ↑↑↑↑↑↑↑↑
+
+Crontab配置文件
+	系统配置文件
+		[root@izwz9a8nvld17yl14m2373z /]# vi /etc/crontab 		// 文件位置
+		SHELL=/bin/bash								// 代表使用bin bash使用shell
+		PATH=/sbin:/bin:/usr/sbin:/usr/bin			// crontab的默认环境变量
+		MAILTO=root									// 每执行一个给root发送一个邮件
+		
+	系统用户crontab配置文件保存目录(crontab -e)
+		/var/spool/cron
+			root用户：/var/spool/cron/root
+			user用户：/var/spool/cron/user
+
+		linux =》 /etc/crontab配置文件 =》 /var/spool/cron配置文件保存目录 =》 调用用户（root/user）触发任务
+
+	环境变量
+	1.	PATH=添加环境变量
+		* * * * * root java -version 2> /root/temp.out
+	2.	添加系统的环境变量
+		vi /etc/profile
+		SHIFT -> G
+		PATH=$PATH:/usr/local/java/bin
+		export PATH
+		
+		cat /root/cat .bash_profile
+		PATH=$PATH:/usr/local/java/bin	用户的环境变量级别
+
+	命令总结
+		查看当前用户保存的计划任务
+			crontab -l 		cat /var/spool/cron / [用户名称]
+
+
+Crontab实战
+	关于日志
+		# tail -n 2 /var/log/cron
+		
+	清理系统日志
+		linux所有的日志存放于 	  [root@izwz9a8nvld17yl14m2373z log]# /var/log/
+			长时间会积累大量的系统日志 所以使用crontab定时清理 保证磁盘的空间
+		查看文件的占用磁盘的大小	  [root@izwz9a8nvld17yl14m2373z log]# du -sh *
+		编写每小时清空一次messages的文件
+			[root@izwz9a8nvld17yl14m2373z log]# crontab -l
+			* 1 * * * cat /dev/null > /var/log/messages
+			【每天凌晨1点去执行 如果全部为*则表示每分钟】
+		示例	
+			[root@izwz9a8nvld17yl14m2373z /]# crontab -l
+			* * * * * sh /root/log_clean.sh
+			[root@izwz9a8nvld17yl14m2373z /]# cat /root/log_clean.sh 
+			#!/bin/sh
+
+			cat /dev/null > /var/log/messages
+
+		
+
+	备份Source Code (备份源代码)
+		mkdir script	》 存放shell脚本文件
+		mkdir backup	》 存放备份的文件
+		crontab写法
+			[root@izwz9a8nvld17yl14m2373z www]# crontab -l
+			* * * * * sh /root/log_clean.sh
+			#* * * * * sh /var/www/script/www_src.sh
+
+		shell写法
+			[root@izwz9a8nvld17yl14m2373z www]# cat script/www_src.sh 
+			#!/bin/sh
+
+			basedir=/var/www/backup 						#定义目录
+
+			html_src=$basedir/html_src/$(date +%F_%H%M)		#定义备份的目录规则
+
+			[ ! -d "$html_src" ] && mkdir -p $html_src		#判断是否存在目录
+
+			cd /var/www
+			tar -jpcf $html_src/html.tar.bz2 html 			#压缩source源码并存放
+
+
+
+	iptables上的应用
+		iptables是linux下的一个内核防火墙 通过添加相关的规则 去检测、修改、重定向、丢弃数据包 从而过滤访问的数据 实现保护系统网络的功能（centos7默认使用firewalld维护内核的防火墙 需要禁用Firewalld并安装iptables代替其作为系统默认的防火墙）
+		步骤一：查看filewalld是否运行
+			systemctl status filewalld
+		步骤二：关闭并禁用防火墙服务
+			systemctl disable firewalld
+			systemctl stop firewalld
+		步骤三：安装iptables
+			yum install -y iptables-services
+
+		步骤四：开启iptables服务并启动iptables
+			systemctl enable iptables 		
+			systemctl start iptables
+			iptables -V 可以查看版本
+		
+		第五步：编写shell
+			#!/bin/sh
+			iptables -F
+			list=/var/www/script/blacklist.txt
+			for line in `cat $list`;do
+			  iptables -I INPUT -s$line -j DROP
+			  echo "$line is dropped into blacklist"
+			done
+					--- 脚本简介：iptables -I INPUT -s$line -j DROP 输入流如果存在该ip跳过（禁止访问）
+
+		第六步：crontab定时任务写法
+			* * * * * source /etc/profile; sh /var/www/script/filewall.sh
+
+		第七步：iptables-nVL 查看禁止访问的ip
+
+		
+		简易的使用可以晕Jenkins 图形化的操作定时任务
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+		
+
+
+
+
+		
+
+
+
+

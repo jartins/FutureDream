@@ -1,0 +1,92 @@
+日期时间函数库简介
+	可以设置时区的三种方式 
+		date.timezone、
+		date_default_timezone_set()动态设置时区、
+		init_set()动态配置
+
+
+
+
+日期时间常用函数使用
+	判断是否是闰年
+		if($year%4==0 && ($year%100!=0 || $year%400==0)){
+		   echo '是闰年';
+		}else{
+		   echo "不是闰年";
+		}
+		date('L')?'是闰年'：‘不是闰年’;
+
+
+	echo date("L")."<br />"; // 0 平年 1 闰年
+	echo date("W")."<br />"; // 全年的第几周
+	echo date("z")."<br />"; // 全年的第几天
+	echo date("t")."<br />"; // 本月总共几天
+
+
+
+使用微秒 计算程序的执行时间
+	$start = microtime(true);
+	for($i=1; $i<=10000; $i++)
+	{
+		$arr[]=$i;
+	}
+	$end=microtime(true);
+	echo "程序执行时间为:".round($end-$start,4)
+
+getdate()
+	// echo "<pre>";
+	// print_r(getdate());
+
+gettimeofday()
+	// echo "<pre>";
+	// print_r(gettimeofday());
+
+checkdate(2, 29, 2018)
+	echo "<pre>";
+	var_dump(checkdate(2, 29, 2018));
+
+
+
+
+常用日期空间的使用
+
+	HTML5中新增表单控件
+		form input:date
+		form input:datetime
+		form input:datetime-local
+		form input:month
+		form input:week
+		form input:time
+
+	jQuery datetimepicker	插件的使用
+
+	jQuery Timer plugin 	插件的使用 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,40 @@
+文件上传配置
+	file_uploads 		支持HTTP上传
+	upload_tmp_dir		临时文件保存路径
+	upload_max_filesize 允许上传文件的最大值
+	max_file_uploads	允许一次上传的最大文件数
+	post_max_size		POST方式发送数据的最大值
+
+	max_execution_time = -1 	设置了脚本被解析器终止之前允许的最大执行时间，单位是秒，防止程序写的不好而占尽服务器资源
+
+	input hidden MAX_FILE_SIZE value
+	<input type='file' name='myfile' accept='image/jpeg,image/gif' />
+
+	后端
+	getimagesiz() 检测是否是图片文件 【如果是图片就会返回数组,图片的信息 . 否则返回false】
+
+
+	确保文件名称的唯一性
+		uniqid() 函数基于以微秒计的当前时间，生成一个唯一的 ID。
+			注释：由于基于系统时间，通过该函数生成的 ID 不是最佳的。如需生成绝对唯一的 ID，请使用 md5() 函数。
+		示例：md5(uniqid(microtime(time),true));
+
+
+	总结：服务器端的校验 上传文件大小、上传文件的类型、是否是真实的图片、目录是否存在、是否名称唯一、是否是HTTP POST提交
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

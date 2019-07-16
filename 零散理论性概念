@@ -1,0 +1,60 @@
+关于自动加载类：PHP5.2之后就出现了自动加载类 最早的项目都是通过include与require载入的 但是在后期的项目扩展中 会有大量的文件需要引入 管理开发不方便 
+
+__autoload() 后来被废弃的原因是 一个php工程可能会依赖多个框架 如果每个框架都会有这个函数 就会报一个函数重复定义的错误
+
+在php5.3之后 就出现了一个 spl_register_autoload() 取代 __autoload() spl_register_autoload特点是它可以允许你存在多个autoload函数
+	spl_register_autoload('autoload1');
+	test1::test();
+	test2::test();
+	function autoload1($class){
+		require
+	}
+
+
+psr-0规范：
+	1. PHP的命名空间必须以绝对路径一致
+	2. 类名的首字母必须大写
+	3. 除入口文件外，其他'.php'必须只有一个类（除了入口文件之外，其他'.php'必须只有一个类 不能有执行的代码）
+		PHP业界大家共同提出的编码规范，现在有很多的开源项目和框架都遵循psr-0的规范
+
+
+
+
+图片防盗链
+	原理
+		访问图片的域名是否是本站的
+
+	实现
+		判断 Request Header的Refer
+		apache的重写防止 .htaccess重写规则防图片盗链
+
+	.htaccess写法
+		RewriteEngine on
+		RewriteCond %{REQUEST_FILENAME} .*\.(jpg|jpeg|png|gif)[NC]
+		RewriteCond %{REQUEST_REFERER} !^http://localhost/.*$[NC]
+		RewriteRule .* nopic.png
+
+		步骤
+			开启重写引擎
+			判断访问文件的后缀
+			访问域名条件
+			条件成立之后的结果
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

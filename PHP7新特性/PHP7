@@ -1,0 +1,134 @@
+PHP7之前的版本：开发效率快，语言本身性能差 
+普通的PHP网站：IO密集型，瓶颈在MySQL上，体现不出来PHP的性能劣势，在密集计算方面比C、C++、java差几十倍至上百倍
+	Facebook开发了一个HHVM(重写的PHP引擎)项目会有70%的提升，在最新公布的php7 alpha1版本 在wordpress项目中的测试结果超过了HHVM。重写了ZendVM，性能比PHP5.6提升300%
+		5.6最大qps112
+		7  最大qps311
+
+
+php7新特性：主要是添加了两个新的特性
+	1. 变量类型
+		PHP7版本函数的参数和返回值增加了类型限定。为什么PHP要加入类型，实际上此项特性是为了PHP7.1版本JIT特性做准备，增加类型后PHP JIT可以准确判断变量类型，生成最佳的机器指令
+			优点是不用机器再去动态的判断类型值
+			function test(int $a, string $b, array $c) : int {
+				// code
+			}
+
+	2. 错误异常
+		PHP程序出错后过去的Zend引擎会发生致命错误并终止程序运行，PHP7可以使用try/catch捕获错误
+			try{
+				non_exists_func();
+			} catch (EngineException $e){
+				echo "Exception: {$e->getMessage()}\n";
+			}
+
+
+
+
+PHP7性能优化 节省了一次内存的分配
+	1. zval使用栈内存
+		在Zend引擎和扩展中，经常要创建一个PHP的变量，底层就是一个zval指针。之前的版本都是通过MAKE_STD_ZVAL动态的从堆上分配一个zval内存。而PHP7可以直接使用栈内存
+			PHP5
+			zval *val; MAKE_STD_ZVAL(val)
+			PHP7
+			zval val
+		另外在PHP程序中也会创建大量的变量，在php7中就会将这些变量在栈上预分配一些内存来存放这些zval----------------> 节省了大量的内存分配和管理的操作 性能就会得到很大的提升
+
+	2. zend_string存储hash值，array查询不再需要重复计算hash
+		PHP7位单字符串创建了新的类型叫做zend_string,除了char *指针和长度之外，增加了一个hash字段，用于保存字符串的hash值。数组键值查找不需要反复计算hash值。
+			struct _zend_string {
+				zend_refcounted		gc;
+				zend_ulong			h;
+				size_t				len;
+				char 				val[1]
+			};
+		
+	3. hashtable桶内直接存数据，减少了内存申请次数，提升了Cache命中率和内存访问速度
+		解释:php7之前的版本 hashtable是php的核心数据结构 它存放数据是在arBuckets结构体上 存储一些bucket的指针 在指针上就是一些对应的数据。在PHP7中对其做了一些改进 它将之前的arBucket结构改成了arData 他们俩的区别是arData直接就是大块内存 在这个内存之上 就是一个一个的桶，这样的好处就是在PHP之前版本每执行一次插入等操作就申请一次内存 100个就申请100个内存，php7优化之后就只需要分配一块大内存就可以了 这样就减少了内存申请的次数 顺便也提升了cache命中率(访问桶的数据时申请的指针不是连续申请的,这样申请的内存就在不同的内存页之上,这样的话如果读取第一个桶和第三个桶 这样可能内存就分布在两个内存页上 它的命中率就会降低。php7则在同一块内存页上 申请不同的桶也会直接命中)
+
+	4. zend_parse_parameters改为宏实现，性能提升5%
+		解释：从PHP变量到C扩展函数之间 交换一些参数交换返回值 这时候需要zend_parse_paramters来实现
+		在PHP之前的话是一下的c函数完成工作的   PHP7将该函数转换成了宏 展开之后它会直接获取到每一项元素的值 不再去执行该函数
+			if(zend_parse_parameters(ZEND_NUM_ARGS()
+				TSRMLS_CC, "za|b",
+				&value, &array, &strict) == FAILURE){
+			}
+
+	5. 新增加4种OPCODE, call_user_function, is_int/string/array, strlen, defined 4个函数变为PHP OpCode指令，速度更快
+		
+
+	6. 其他更多性能优化，如基础类型int,float,bool等改为直接进行拷贝,排序算法改进,PCRE with JIT , execute_data 和 opline使用全局寄存器,使用gdb4.8的PGO功能
+		解释：PHP7的基础类型都是直接进行值拷贝。
+		排序算法改进：php7之前的排序算法是使用c提供的排序函数，在PHP7中zend开发组重新写了zend_sort来对php做了性能优化。
+		PCRE with JIT：正则表法式可以编译为机器码
+		PGO功能：首先编译一个普通的php 然后使用这个php对我们线上的程序执行一段时间，它会导出一份运行时的数据统计，最后再重新编译一次PHP 然后把上一次的统计结果给到gdb 它会生成一个更适合你的程序的一个PHP版本 实际上就是gdb对php进行了一次优化 
+
+
+				PHP7与HHVM性能对比在大多情况下保持相同的水平 在某些场景下比HHVM性能更快(WardrobeCMS 1.2.0)
+
+
+
+PHP7与JIT（Java底层引擎也是使用的JIT）
+	PHP7.0-final版本不会携带JIT特性
+		JIT是just in time的缩写，表示运行时将指令转为二进制机器码。对于计算机密集型的程序，JIT可以将PHP的Opcode直接转换为机器码，大幅提升性能 
+		PHP开发组已经重启JIT开发计划，预计将PHP7.1版本带有JIT特性
+
+	为什么PHP7.0没有JIT
+		JIT对于实际项目，如WordPress没有太大的性能提升
+
+	
+
+
+PHP7内置一个服务器 
+	使用：/usr/local/php/bin/php -S 0.0.0.0:9001 		浏览器直接访问 http://0.0.0.0:9001	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

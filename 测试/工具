@@ -1,0 +1,20 @@
+接口的测试工具
+	fiddler		（原理似代理）
+
+	postman
+
+	wireshark
+
+	soapui
+
+	Python、php(接口自动化)
+
+	loaderunner(接口性能)
+
+	httprequester
+
+	JMeter(接口性能)
+
+
+
+常用的接口测试工具：fiddler\postman、python

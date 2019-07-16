@@ -1,0 +1,52 @@
+安装环境要求
+	PHP版本 》= 5.6.4
+	相关扩展
+	MySQL
+
+采用composer安装laravel
+	composer create-project laravel/laravel laravel54 "5.4.*"
+				创建项目		github中的此目录 下载后的名称 下载其中的分支
+
+启动laravel
+	方式一是配置webserve需看官网的文档
+	方式二 php artisan serve    /    php artisan help serve(可以设置端口 模式等)
+
+Laravel目录结构介绍
+	文件夹介绍
+		app 		逻辑代码
+		config		配置文件
+		database	数据库管理
+		public	 	对外资源
+		resource	视图等资源文件
+		storage		日志文件(在配置时需要有读写的权限)
+		tests		测试用例
+		vendor		第三方类包
+
+修改.env数据库配置文件
+	首先使用.env的好处是可以在使用版本库的时候 可以有效的避免关键数据秘钥的泄露 可以有效的规避.evn文件
+	所在位置/laravel54/config/databases.php > 'default' => env('DB_CONNECTION', 'mysql'),
+	env(方法如果存在读取.env中的数据 , 如果不存在读取配置文件下mysql的值)
+
+	.gitignore 文件在上传时 避免将.env数据存储且上传
+
+	在.env文件修改好了数据库的信息之后 需要测试是否成立 所以在项目命令行中输入 php antisan 里面有创建表的命令
+		migrate : 表示用来做数据迁移的
+  		migrate:install      Create the migration repository 
+
+  	结果
+  	GoogoldeMBP:laravel54 googol$ php artisan migrate:install
+	Migration table created successfully.
+
+	创建成功
+
+
+
+
+
+
+
+
+
+
+
+

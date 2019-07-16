@@ -1,0 +1,62 @@
+缓冲区buffer
+ob_start
+file_put_contents(页面民称, 获取缓冲区内容/ob_get_contents())
+触发系统生成纯静态化页面的三种方式		
+	1. 页面添加缓存时间
+		filemtime:函数返回文件内容的上次修改时间。
+		if(is_file() && (time() - filemtime()) < 300){
+
+		}else{
+
+		}
+	2. 手动触发方式
+
+	3. crontab定时扫描程序
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

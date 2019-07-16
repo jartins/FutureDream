@@ -1,0 +1,108 @@
+适配器模式
+	定义：适配器模式，可以将截然不同的函数接口封装成统一的API
+	实际应用的举例
+		PHP的数据库操作有mysql,mysqli,dpo 3种。可以使用适配器模式统一成一致的。类似的场景还有cache适配器，将memcache，redis，file，apc等不同的缓存函数，统一成一致的
+
+	概述：所谓的适配器模式 就是将多种类同的数据操作方式 封装成不同的类 但是相同的格式 最后便捷的调用
+
+	代码示例：	
+	1.php 			// 主要定义了 对于mysql mysqli pdo操作必要的三个接口
+	interface Databases{
+		function connect($host,$user,$passwd,$dbname);
+		function query($sql);
+		function close()
+	}
+
+	2.php 			// 主要定义实现了 Mysql的操作
+	class Mysql implements Databases{
+		protected $result;
+		function connect($host,$user,$userpwd,$dbname){
+			$result = mysql_connect($host,$user,$userpwd);
+			mysql_select_db($dbname,$result);
+			$this->result = $result;
+		}
+
+		function query($sql){
+			$res = mysql_query($sql,$this->result);
+			return $res;
+		}
+
+		function close(){
+			mysql_close($this->result);
+		}
+
+	}
+
+	3.php 			// 主要定义了实现MySQLi的操作
+	mysqli_connect(host,user,pwd,dbname,port,scoket);
+											socket	可选。规定 socket 或要使用的已命名 pipe。
+	class Mysqli implements Databses{
+		function connect($host,$user,$userpwd,$dbname){
+
+		}
+	}
+
+	.... .... 适配器的使用
+
+	$db = new \namespace\nmspce\Mysql();
+	$db->connect(host,user,pwd,dbname);
+	$db->query('show databases');
+	$db->close();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

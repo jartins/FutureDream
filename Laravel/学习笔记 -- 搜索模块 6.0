@@ -1,0 +1,214 @@
+搜索模块
+    搜索设计
+        es简介
+            elasticsearch 是一个 实时的分布式的搜索和分析引擎(可扩展 支持多台引擎)，是一个基于Lucene的搜索服务器
+                （Lucene是一款高性能的、可扩展的信息检索（IR）工具库。信息检索是指文档搜索、文档内信息搜索或者文档相关的元数据搜索等操作）
+            它在Lucene的接口外面做了一个分装 我们只需要统一开发好的API 无需了解其内部的复杂原理
+            原理：它的原理基本是基于倒排索引的算法
+            倒排索引：简要来说就是一篇文章进入索引的时候就根据某个字典进行分词，然后根据字典来倒排。倒排的意思就是在内存中存储某个字典 并且保存每一个字典对应的文档到硬盘中，当我们需要搜索某个单词 就会去匹配这个单词 然后去找这个单词有哪些文档 然后再去磁盘中抓取这些文档然后输出。
+
+        中文支持
+            elasticsearch是由一批开源成员支持的 以medcl为首 可以去github查看
+
+            分词：英文的分词是以空格分开的，中文的分词是以词义分开的
+            中文分词的插件名称 medcl/elasticsearch-analysis-ik   https://github.com/medcl/elasticsearch-analysis-ik
+
+            提供了两种分析器
+                第一种：ik_max_word
+                第二种：ik_smart
+
+        介绍elasticsearch及相关插件
+            Elasticsearch基本概念
+                index   (索引)        =》 MySQL中的数据库
+                type    (类型)        =》 MySQL中的表
+                document(文档)        =》 MySQL表中每一行的数据
+                field   (字段)
+                template(模板)        =》 字段的分析器配置
+
+            elasticsearch的访问地址概解
+                http://localhost:9200/myindex/share/1
+                        服务器    端口 索引民称 索引类名 索引文档唯一标示
+
+
+
+        梳理实现搜索模块的具体步骤
+            安装ES和ik插件
+                采用安装集成包的方式(避免再去安装中文的分词插件)
+                https://github.com/medcl/elasticsearch-rtf
+
+                安装步骤一
+                    localhost:Downloads googol$ unzip elasticsearch.zip
+                    localhost:Downloads googol$ cd elasticsearch-rtf-master
+                    localhost:elasticsearch-rtf-master googol$ bin/elasticsearch-plugin list
+                    localhost:elasticsearch-rtf-master googol$ bin/elasticsearch-plugin list > /tmp/plugin.log
+                    localhost:elasticsearch-rtf-master googol$ vim /tmp/plugin.log
+                    localhost:elasticsearch-rtf-master googol$ cat /tmp/plugin.log|xargs -I {} bin/elasticsearch-plugin remove {}
+                    localhost:elasticsearch-rtf-master googol$ bin/elasticsearch -d                     启动
+                    localhost:elasticsearch-rtf-master googol$ cat logs/elasticsearch.log               查看详细的端口及IP
+
+                测试是否安装成功 127.0.0.1:9200
+
+
+            Es与laravel scout包安装
+                Laravel的scout包安装及Laravel-es包安装
+                    1. scout(laravel的全文检索系统): https://laravel-china.org/docs/laravel/5.4/scout/1276
+                       localhost:laravel54 googol$ composer require laravel/scout
+                       app.php 配置文件中添加 Laravel\Scout\ScoutServiceProvider::class,
+                       localhost:laravel54 googol$ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
+
+                    2. 安装scout(laravel的全文检索系统的驱动): https://github.com/ErickTamayo/laravel-scout-elastic
+                       localhost:laravel54 googol$ composer require tamayo/laravel-scout-elastic
+
+                       // config/app.php
+                       'providers' => [
+                           ...
+                           Laravel\Scout\ScoutServiceProvider::class,
+                           ...
+                           ScoutEngines\Elasticsearch\ElasticsearchProvider::class,
+                       ],
+
+                    3. 修改scout.php
+
+            创建ylaravel的索引和模板
+                使用laravel的Command实现搜索引擎索引和模版的建立 (自定义脚本创建es的index与template)
+                    创建command(自定义artisan)
+                        laravel自定义脚本介绍
+                            1.localhost:laravel54 googol$ php artisan make:command ESInit     (创建自定义脚本初始化 创建成功过在app\console\commands)
+                            2.修改其中 protected $signature = 'es:init';，protected $description = 'init laravel for post';
+                            3.挂载    app\console\Kernel.php
+                                protected $commands = [
+                                    App\Console\Commands\ESInit::class,
+                                ];
+
+
+                    编辑handel
+                            创建index 创建template
+                                use GuzzleHttp\Client;  // restful 风格的http请求类
+                                localhost:laravel54 googol$ composer require guzzlehttp/guzzle
+                                在app\console\commands ESInit 中的 Handel() 方法中写入创建模板、创建index
+                                代码：
+                                    public function handle()
+                                        {
+                                            $client = new Client();
+                                            // 创建模版
+                                            $url = config('scout.elasticsearch.hosts')[0] . '/_template/tmp';
+
+                                            $client->put($url, [
+                                                'json' => [
+                                                    'template' => config('scout.elasticsearch.index'),
+                                                    'settings' => [
+                                                        'number_of_shards' => 1
+                                                    ],
+                                                    'mappings' => [
+                                                        '_default_' => [
+                                                            '_all' => [
+                                                                'enabled' => true
+                                                            ],
+                                                            'dynamic_templates' => [
+                                                                [
+                                                                    'strings' => [
+                                                                        'match_mapping_type' => 'string',
+                                                                        'mapping' => [
+                                                                            'type' => 'text',
+                                                                            'analyzer' => 'ik_smart',
+                                                                            'ignore_above' => 256,
+                                                                            'fields' => [
+                                                                                'keyword' => [
+                                                                                    'type' => 'keyword'
+                                                                                ]
+                                                                            ]
+                                                                        ]
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]);
+                                            $this->info("======= 创建模板成功 =======");
+
+                                            $url = config('scout.elasticsearch.hosts')[0] . '/' . config('scout.elasticsearch.index');
+
+                                            $client->put($url, [
+                                                'json' => [
+                                                    'settings' => [
+                                                        'refresh_interval' => '5s',
+                                                        'number_of_shards' => 1,
+                                                        'number_of_replicas' => 0,
+                                                    ],
+                                                    'mappings' => [
+                                                        '_default_' => [
+                                                            '_all' => [
+                                                                'enabled' => false
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]);
+                                            $this->info("======= 创建成功 =======");
+
+                                        }
+
+
+                    执行脚本：
+                        localhost:laravel54 googol$ php artisan es:init
+                        ======= 创建模板成功 =======
+                        ======= 创建成功 =======
+                        出现以上说明成功创建了 guzzlehttp 脚本
+
+
+            关联模型并使用scout命令导入数据
+                导入POST模型
+                    修改POST模型
+                        让这个模型与laravel中scout中的模型相对应
+                        1. 首先在POST模型中加入  use Laravel\Scout\Searchable;  这样就满足 scout 了
+                           代码实例
+                                use Laravel\Scout\Searchable;
+
+                                class Posts extends Model
+                                {
+                                    use Searchable;// 使用searchable
+
+                                    // 定义索引里的type
+                                    public function searchableAs()
+                                    {
+                                        return 'posts';
+                                    }
+
+                                    // 定义哪些字段需要搜索
+                                    public function toSearchableArray()
+                                    {
+                                        return [
+                                            'title' => $this->title,
+                                            'content'=>$this->content,
+                                        ];
+                                    }
+
+                    导入post模型
+                        使用 php artisan 导入模型
+                        localhost:laravel54 googol$ php artisan scout:import "\App\Posts"
+                        然后 使用 http://127.0.0.1:9200/laravel54/posts/45 就可以查看数据了
+
+                    测试新增删除数据
+
+
+        使用路由和模版搭建搜索结果页
+            搭建搜索的路由 然后搭建搜索的页面 需要注意的是路由是需要先后顺序的
+
+        使用scout实现搜索结果展示及分页
+            使用scout的好处是 像使用普通model一样使用搜索引擎
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

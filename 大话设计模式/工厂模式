@@ -1,0 +1,88 @@
+工厂模式
+	工厂模式主要是负责创建类的实例的
+		比如项目中需要一个缓存类，有些数据需要放在缓存里面 常用的缓存有memcache redis。
+	代码示例 --- cache factory 工厂模式
+	class Memcache{
+		function set($k,$v){
+
+		}
+		function get($k){
+
+		}
+		function delete($k){
+
+		}
+	}
+	class Redis{
+		function set($k,$v){
+
+		}
+		function get($k){
+
+		}
+		function delete($k){
+
+		}
+	}
+	class Cache{
+		public static function factory(){
+			return new Memcache();
+				return new Redis();
+		}
+	}
+	$cache = Cache::factory();
+	$cache->set();
+	$cache->get();
+	$cache->delete();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

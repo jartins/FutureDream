@@ -1,0 +1,128 @@
+接口(interface)： 接口不能被直接实例化
+	接口是类的模板，在接口里面只需要定义实现的方法，但是所定义的方法都必须是空方法。方法在接口里面是不做具体实现的，可以这么理解 ！接口是类的模板 类是对象的模板 ！
+
+	接口好比产品说明书 业务好比使用这个场景
+
+	业务模拟
+		写一个业务类 去应用前面的两个方法 比如在L类中定义一个方法 这个方法里面的参数 必须是实现了Person接口的对象
+		注：类也是一种类型，可以作为参数的类型提示，接口也是可以作为类的类型提示的 而且很常用
+	
+	1. 接口的实现代码实例
+	interface Person
+	{
+		function eat();
+		function sleep();
+	}
+	class Man implements Person{
+		function eat(){
+			echo "吃饭";
+		}
+		function sleep(){
+			echo "睡觉";
+		}
+	}
+		class Woman implements Person{
+			function eat(){
+				echo "水果";
+			}
+			function sleep(){
+				echo "睡觉";
+			}
+		}
+	class L
+	{
+		public static function factory(Person $user){
+			return $user;
+		}
+	}
+	$user = L::factory(new Man());
+		$user = L::factory(new Woman());
+
+	// 很多的业务逻辑代码
+	$user->eat();
+
+	// 很多的业务逻辑代码
+	$user->sleep();
+
+
+	2.接口的继承代码实例
+	interface A{
+		const ABC = 'abc';	// 定义接口的常量
+		function aa();
+	}
+	interface B{
+		function bb();
+	}
+	interface C extends A,B{
+
+	}
+	class Test implements C{
+		// class Test implements A,B{
+		function aa(){
+			echo "aaaaa";
+		}
+		function bb(){
+			echo "bbbbb";	
+		}
+	}
+	$result = new Test;
+	$result->aa();
+	$result->bb();
+	echo A::ABC;			// 获取接口中的常量
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

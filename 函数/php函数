@@ -1,0 +1,156 @@
+move_uploaded_file(规定要移动的文件,规定文件的新位置)		=》		成功返回true 失败返回false
+
+上传文件错误号
+	0	没有发生错误 文件上传成功
+	1	上传的文件超过了php.ini 中 upload_max_filesize 选项限制的值。
+	2	上传文件的大小超过了HTML表单中MAX_FILE_SIZE选项指定的值
+	3	文件之后部分被上传
+	4	没有文件被上传
+	6	找不到临时文件
+	7 	文件写入失败
+	8	上传的文件被PHP扩展程序中断
+
+检测扩展是否安装成功的函数 	extension_loaded('扩展名')
+检测函数是否可以使用		function_exists()
+得到函数库的信息			gd_info()
+得到所有已经定义的函数		get_defined_functions()
+join() 函数				把数组元素组合为一个字符串
+array_flip()			反转数组中的键名和对应关联的键值：
+substr()				substr(string,start,length)
+mb_substr()				string mb_substr ( string $str , int $start [, int $length = NULL [, string $encoding = mb_internal_encoding() ]] )		encoding 参数为字符编码。如果省略，则使用内部字符编码
+							mb_substr ($string,$start,1,'utf-8');
+
+isset()		是否存在
+is_file()	是否是个文件
+is_readable()是否可读
+list() 
+
+
+include与require区别？
+
+mktime(h,i,s,n,j,Y)	// 得到指定日期的时间戳  小时、分钟、秒、月、日、年
+
+计算两个日期的时间差
+	$birth=mktime(0,0,0,12,19,96);
+	$time=time();
+	$age=floor(($time-$birth)/(24*3600*365));	// 返回年龄
+
+strtotime
+	echo date('Y-m-d H:i:s',strtotime('+1 day'))	// 当前时间加一天
+	echo date('Y-m-d H:i:s',strtotime('+5 days'))	// 当前时间加五天
+	echo date('Y-m-d H:i:s',strtotime('+2 years 3 months 12 days'))	// 当前时间加两年三个月十二天
+
+
+微秒的使用
+microtime：当前 Unix 时间戳以及微秒数。
+	echo microtime => 第一部分是微秒 第二部分是时间戳
+	echo microtime(true) => 组合成浮点数
+
+getdate — 取得日期／时间信息
+	echo "<pre>";
+	print_r(getdate());
+
+gettimeofday - 取得当前时间
+	"sec" - 自 Unix 纪元起的秒数
+	"usec" - 微秒数
+	"minuteswest" - 格林威治向西的分钟数
+	"dsttime" - 夏令时修正的类型
+	
+checkdate — 验证一个格里高里日期
+	checkdate(month, day, year) // 返回是否存在这个日期
+
+instanceof 			用于确定一个 PHP 变量是否属于某一类 class 的实例：
+
+
+readfile() 函数输出一个文件。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+递归函数
+	函数在它的函数体内调用它自身，这种函数称之为递归函数		=》 相当于数学中的阶乘
+	// 3! = 3*2*1
+	例子
+		function recursive($i)
+		{
+			$sum = 1;
+			if(1 == $i)
+			{
+				echo $sum;
+			}
+			else
+			{
+				echo $i * recursive($i - 1);
+			}
+			return $sum;
+		}
+		echo recursive(3);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

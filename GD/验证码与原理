@@ -1,0 +1,86 @@
+GD操作步骤
+	1.创建画布	imagecreatetruecolor()
+	2.创建颜色	imagecolorallocate()
+	3.开始绘画	imagechar()	imageup()
+	4.输出或保存	header('content-type:image/jpeg')   imagejpeg()
+	5.销毁资源	imagedestory()
+
+
+
+验证码的实现
+	创建画布、创建字体(字体 角度 颜色)、随机数填充
+	添加干扰元素(添加像素 imagesetpixel)、添加线段(绘制imageline)、绘制圆弧imagearc、字体宽度(iamgefontwidth)、字体高度(imagefontheight)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

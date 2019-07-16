@@ -1,0 +1,38 @@
+缩略图的实现
+	场景：商品管理时制作小的商品缩略图
+	实现的函数 		imagecopyresampled
+	得到图片信息的函数	getimagesize()
+	imagecreatefromjpeg()
+	imagecreatefrompng()
+	imagecreatefromgif()
+
+文字水印的实现
+	https://packagist.org/packages/masterexploder/phpthumb
+	composer require masterexploder/phpthumb
+
+图片水印的实现
+
+
+
+	推荐使用PHP中的	imageMagick
+					Gmagick			以上两种在多图或大图中性能要比GD库高的多
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,302 @@
+一、SQL的发展历程
+	SQL语言：结构化查询语言
+	简史：从86年开始制定标准 经历了SQL89 和 SQL92两个历程 直到2015
+
+二、SQL语句的分类
+	常见的SQL语句类型
+		 	DDL 数据定义语言	create alt 
+			TPL 事物处理语言
+	SQL =》	DCL	数据控制语言	grant 
+			DML	数据操作语言
+
+三、join从句----连接
+	JOIN	=》	INNER		（内连接
+			=》	FULL OUTER	（全外连接
+			=》	LEFT OUTER	（左外连接
+			=》	RIGHT OUTER	（右外连接
+			=》	CROSS		（交叉连接
+
+
+	示例表结构体及数据
+		A
+		1	唐僧
+		2	猪八戒
+		3	孙悟空
+		4	沙僧
+		
+		B 
+		1	孙悟空
+		2	牛魔王
+		3	蛟魔王
+		4	鹏魔王
+		5	狮驼王
+
+	Join的操作类型—————Inner join
+		1. 内连接Inner join基于连接谓词将两张表的列组合在一起，产生新的结果表，获取的内容是两张表的公共的数据
+			SELECT * FROM a INNER JOIN b ON a.`user_name` = b.`user_name`;
+			查询结果：3	孙悟空	1	孙悟空				（可以看出能够查询到两张表公共的部分数据）
+
+	Join的操作类型—————Join从句一左外连接—————Left Outer Join
+		1. SELECT * FROM a left join b on a.user_name = b.user_name
+			SELECT * FROM a left join b on a.user_name = b.user_name where b.user_name is not null
+			查询结果： 	1	唐僧		
+					 	2	猪八戒		
+						3	孙悟空	1	孙悟空
+						4	沙僧		
+														（A LEFT OUTER JOIN B表示把A表的记录都显示出来，把B表符合条件的结果集显示出来，不符合条件的用NULL表示。）
+
+	Join的操作类型——————Join从句一右外连接—————Right Outer Join
+		1. SELECT * FROM b right join a on b.user_name = a.user_name where a.user_name is not null
+			查询结果：
+									1	唐僧
+									2	猪八戒
+						1	孙悟空	3	孙悟空
+									4	沙僧
+
+														（A RIGHT OUTER JOIN B表示把B表的记录都显示出来，把A表符合条件的结果集显示出来，不符合条件的用NULL表示。）
+
+	Join的操作类型——————Join从句一全连接—————FULL Join
+		1. 	SELECT * FROM a full join b on a.user_name = b.user_name 执行会报错 大多不支持 需要用集合的方式去查询
+			SELECT * FROM a left JOIN b on a.user_name = b.user_name UNION ALL SELECT * FROM b LEFT JOIN a on b.user_name = a.user_name;
+			查询结果
+				1	唐僧		
+				2	猪八戒		
+				3	孙悟空	1	孙悟空
+				4	沙僧		
+				1	孙悟空	3	孙悟空
+				2	牛魔王		
+				3	蛟魔王		
+				4	鹏魔王		
+				5	狮驼王		
+
+														（A FULL OUTER JOIN B 表示把A表和B表的记录都显示出来，不符合条件的用NULL表示)
+
+	Join的操作类型——————Cross Join—————交叉连接
+		简介：交叉连接(Cross Join),又称笛卡尔积(cartesian join) 或叉乘(Product),如果A和B是两个集合，他们的交叉连接就记为A * B
+		1. SELECT * FROM a CROSS JOIN b
+			查询结果及特点
+				1	唐僧		1	孙悟空
+				2	猪八戒	1	孙悟空
+				3	孙悟空	1	孙悟空
+				4	沙僧		1	孙悟空
+				1	唐僧		2	牛魔王
+				2	猪八戒	2	牛魔王
+				3	孙悟空	2	牛魔王
+				4	沙僧		2	牛魔王
+				1	唐僧		3	蛟魔王
+				2	猪八戒	3	蛟魔王
+				3	孙悟空	3	蛟魔王
+				4	沙僧		3	蛟魔王
+				1	唐僧		4	鹏魔王
+				2	猪八戒	4	鹏魔王
+			    3	孙悟空	4	鹏魔王
+				4	沙僧		4	鹏魔王
+				1	唐僧		5	狮驼王
+				2	猪八戒	5	狮驼王
+				3	孙悟空	5	狮驼王
+				4	沙僧		5	狮驼王 
+														（笛卡尔积连接结果）
+
+四、与join相关的开发技巧
+	如何更新使用过滤条件中包括自身的表？（子查询 带条件）
+	这条SQL的条件是 将都存在与两张表中的某个字段进行比较 只有是相同的字段的数据相同 才进行数值的修改
+	update a join (select b.`user_name` from a join b on a.user_name = b.user_name) b on a.user_name = b.user_name set a.over='齐天大圣';
+	解释 update a join b on a.user_name = b.user_name set a.over='斗战圣佛';
+
+五、使用join优化子查询
+	写在前面：子查询是比较低效的，因为它会将每条记录都进行匹配(如果数据量大时 会非常的耗时 可以用join进行优化)
+	join 优化前的SQL语句显示
+	select a.user_name,a.over,(select over from b where a.user_name = b.user_name) as over2 from a;
+		查询到的数据
+			+-----------+-----------------+--------+
+			| user_name | over            | over2  |
+			+-----------+-----------------+--------+
+			| 唐僧       | 旃檀功德佛       | NULL   |
+			| 猪八戒     | 净坛使者         | NULL   |
+			| 孙悟空     | 齐天大圣         | 大婶    |
+			| 沙僧       | 金身罗汉         | NULL   |
+			+-----------+-----------------+--------+
+			4 rows in set (0.00 sec)
+
+	join 优化后的SQL语句显示
+	select a.user_name,a.over,b.over AS over2 from a left join b ON a.user_name = b.user_name;
+	mysql> select a.user_name,a.over as over3,b.user_name,b.over as over2 from a left join b on a.user_name = b.user_name where b.over is not null;
+			+-----------+-----------------+--------+
+			| user_name | over            | over2  |
+			+-----------+-----------------+--------+
+			| 唐僧       | 旃檀功德佛       | NULL   |
+			| 猪八戒     | 净坛使者         | NULL   |
+			| 孙悟空     | 齐天大圣         | 大婶    |
+			| 沙僧       | 金身罗汉         | NULL   |
+			+-----------+-----------------+--------+
+			4 rows in set (0.00 sec)
+
+六、使用join优化聚合子查询
+	未优化之前的语句
+	mysql> select a.user_name,c.timestr,c.kills
+    -> from a join c
+    -> on a.id = c.user_id
+    -> where c.kills = (select max(c.kills) from c where a.id = c.user_id);
+	+-----------+------------+-------+
+	| user_name | timestr    | kills |
+	+-----------+------------+-------+
+	| 沙僧      	| 2013-01-10 |     3 |
+	| 孙悟空    	| 2013-01-11 |    20 |
+	| 猪八戒    	| 2013-01-07 |    17 |
+	+-----------+------------+-------+
+	3 rows in set (0.00 sec)
+											
+
+	优化之后的语句
+	mysql> select a.user_name,c.timestr,c.kills from a join c on a.id = c.user_id group by a.user_name,c.timestr,c.kills having c.kills = max(c.kills);
+	+-----------+------------+-------+
+	| user_name | timestr    | kills |
+	+-----------+------------+-------+
+	| 沙僧      	| 2013-01-10 |     3 |
+	| 孙悟空    	| 2013-01-11 |    20 |
+	| 猪八戒    	| 2013-01-07 |    17 |
+	+-----------+------------+-------+
+													------ 以上均显示 关系中每个最大的值
+
+
+七、如何实现分组选择？
+	什么是分组选择？分组选择就是将数据进行分类 在分类中提取分类中包含的数据
+	mysql> select a.user_name,c.timestr,c.kills from a join c on a.id = c.user_id order by c.timestr desc limit 2;
+	+-----------+------------+-------+
+	| user_name | timestr    | kills |
+	+-----------+------------+-------+
+	| 猪八戒    	| 2013-01-12 |    10 |
+	| 猪八戒    	| 2013-01-11 |     5 |
+	+-----------+------------+-------+
+
+	mysql> select a.user_name,c.timestr,c.kills from a join c on a.id = c.user_id where kills = (select max(c.kills) from a where a.id = c.user_id) order by c.kills desc;
+	+-----------+-------------+-------+
+	| user_name | timestr     | kills |
+	+-----------+-------------+-------+
+	| 孙悟空    	| 2013-01-11  |    20 |
+	| 猪八戒    	| 2013-01-07  |    17 |
+	| 猪八戒    	| 2013-01-05  |    12 |
+	| 猪八戒    	| 2013-01-10  |    10 |
+	| 猪八戒    	| 2013-01-12  |    10 |
+	| 猪八戒    	| 2013-01-11  |     5 |
+	| 沙僧      	| 2013-01-10  |     3 |
+	| 猪八戒    	| 2013-01-01  |     2 |
+	| 沙僧      	| 2013-01-06  |     1 |
+	+-----------+-------------+-------+
+	9 rows in set (0.00 sec)
+														------ 以上是查询出 最早日期的两条杀怪数量
+
+	以上查询的缺陷是
+		问题：	1. 如果分类或是用户很多的情况下则需要多次执行同一查询
+				2. 增加应用程序同数据库的交互次数
+				3. 增加了数据库执行查询的次数，不符合批处理的原则
+				4. 增加了网络流量
+		优化
+		mysql> select a.user_name,c.timestr,c.kills from (select c.user_id,c.timestr,c.kills,(select count(*) from c join a where c.user_id = a.id and c.kills <= c.kills) as cnt from c group by c.user_id,c.timestr,c.kills) c join a on a.id = c.user_id order by c.kills desc limit 2;
+
+		拆分理解：select a.user_name,c.timestr,c.kills from c join a on a.id = c.user_id;
+		拆分理解：select c.user_id,c.timestr,c.kills,(select count(*) from c join a where c.user_id = a.id and c.kills <= c.kills) as cnt from c group by c.user_id,c.timestr,c.kills
+		+-----------+------------+-------+
+		| user_name | timestr    | kills |
+		+-----------+------------+-------+
+		| 孙悟空    | 2013-01-11 |    20 |
+		| 猪八戒    | 2013-01-07 |    17 |
+		+-----------+------------+-------+
+		2 rows in set (0.01 sec)
+
+
+
+总结：
+	1. SQL语言是结构语言
+	2. 常见的SQL语句类型
+		 	DDL 数据定义语言	create alt 
+			TPL 事物处理语言
+	SQL =》	DCL	数据控制语言	grant 
+			DML	数据操作语言
+	3. join从句----连接
+	JOIN	=》	INNER		（内连接
+			=》	FULL OUTER	（全外连接
+			=》	LEFT OUTER	（左外连接
+			=》	RIGHT OUTER	（右外连接
+			=》	CROSS		（交叉连接			=》 相当于笛卡尔积 记录相配
+    4. 使用join优化子查询
+    	子查询(select 单一的嵌套 select)是比较低效的，因为它会将每条记录都进行匹配(如果数据量大时 会非常的耗时 可以用join进行优化)
+    5. 使用group by优化语句
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,187 @@
+用户注册登录模块
+    页面搭建
+        注：因为laravel自带有auth类 因为登录的逻辑不止是账号与密码 后续会增加 所以建议不用 controller中的auth 删除它
+        登录页面
+        注册页面
+        个人设置
+
+    业务逻辑
+        注册
+            实现上
+            登录路由        login
+            注册路由        register
+            登录控制器       login
+            注册控制器       register
+            个人设置         user
+
+            注册小总结：
+                1 先部署路由
+                2 其次用php artisan make:controller 创建 对应的控制器
+                3 用 php artisan make:model 创建 对应的模型
+                4 使用tinker测试模型类
+                    php artisan tinker
+                    >> $post = new \App\模型();
+                5 之后在控制器写 验证、逻辑、跳转
+                    验证部分参照文档
+                6 在视图写入 $errors 相关
+                6.1 Laravel默认的加密方式是 bcrypt()
+                7 逻辑部分使用 create(compact('',''))
+
+        登录
+            1.auth门脸(Auth门脸类的讲解及配置流程)
+                门脸类的配置文件为auth.php
+            2.登录验证
+                根据路由创建控制器与方法
+                直接使用门脸类 \Auth::attempt($user, $is_remember) 最后完成登录
+
+
+策略类
+    策略类-policy用户授权
+
+
+
+        2. 注册策略类和模型关联
+            使用
+        3. 策略判断
+    策略类-policy用户授权 ----- 相关权限认证
+        1. 文章创建增加用户
+            使用门脸类
+                array_merge(\request(['title','content']),compact('\Auth::id()'))
+
+                登录之后显示用户名
+                    使用门脸类 {{\Auth::user()->name}}
+                登录之后显示文章的作者 使用 模型中添加关联用户(定义反向关联 https://laravel-china.org/docs/laravel/5.4/eloquent-relationships/1265)
+                然后在blade中 {{$value->user->name}} 模型层代码实例
+                    // 关联用户
+                    public function user()
+                    {
+                        return $this->belongsTo('App\User');
+                    }
+
+
+        1. 定义策略类
+                    首先使用artisan 创建 policy
+                        采用命令创建
+                        localhost:laravel54 googol$ php artisan make:policy PostsPolicy
+                        Policy created successfully.
+                        在策略类中编写权限验证
+                              // 修改权限
+                                public function update(User $user, Posts $post)
+                                {
+                                    return $user->id == $post->user_id;
+                                }
+
+                                // 删除权限
+                                public function delete(User $user, Posts $post)
+                                {
+                                    return $user->id == $post->user_id;
+                                }
+
+                        将AuthServiceProvider.php 中修改
+                              protected $policies = [
+                              //  'App\Model' => 'App\Policies\ModelPolicy',
+                                  'App\Posts' => 'App\Policies\PostsPolicy',
+                              ];
+
+                        将控制器中 添加  $this->authorize('update', $posts); (在修改处)
+
+                        ======= ⤴️ ====== 以上的方法是在控制器中起到了权限的作用 下面是在视图层就已经过滤了不该有的权限不让显示
+                        @can('update',$posts)
+                            <a style="margin: auto"  href="/posts/{{$posts->id}}/edit">
+                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+                            </a>
+                        @endcan
+
+
+
+        2. 控制器
+        3. Layout
+        4. 文章编辑权限
+            将控制器中 添加  $this->authorize('update', $posts);
+        5. 退出
+            \Auth::logout();
+
+    登录路由控制（某些访问需要登陆之后才可以访问）
+        控制
+            首先要分析路由类中 并不需要登录的页面需要先进行一个排除
+            然后使用路由的分组
+                Route::group(['middleware' => 'auth:web'], function(){
+                    登录之后才可以使用的路由
+                });
+            然后退出登录 直接访问 /posts 就会发现跳转到了 login 但是没有指定这个的二路由 所以我们需要在 登录路由的后面 ->name('login');
+
+        登录页面检查是否登录
+            在登录的逻辑页面 login.login 加入判断门脸判断是否进行过登录的操作 代码示例如下
+                if (\Auth::check())
+                {
+                    return redirect('/posts');
+                }
+
+
+        / 页面跳转
+            Route::get('/',function(){ return redirect('/posts'); })
+
+
+
+个人逻辑页面
+    数据库修改
+        1. 使用数据库迁移 给数据表添加一个字段
+           localhost:laravel54 googol$ php artisan make:migration alter_user_table
+            Schema::table('user', function (Blueprint $table) {
+                $table->string('avatar',100);
+            });
+
+        2. localhost:laravel54 googol$ php artisan migrate
+
+        3. 数据表中字段添加成功
+
+    头像预览
+        因为在ylaravel.js中有富文本编辑器的js脚本 所以在使用第二个图片预览的时候就会出现冲突的问题 解决问题的办法是加判断的语句 if(editor.config)
+        在js中写入预览的脚本
+            $(".preview_input").change(function (event) {
+                var file = event.currentTarget.files[0];
+                var url  = window.URL.createObjectURL(file);
+                $(event.target).next(".preview_img").attr("src",url);
+
+            })
+            即可满足上传预览图片的功能
+
+
+
+    头像上传
+        直接分析代码
+            // 验证
+            $this->validate(\request(),[
+                'name'  =>  'required|min:3',
+            ]);
+
+            // 逻辑
+            $name = request('name');
+            $user = \Auth::user();
+            if ($name != $user->name)
+            {
+                if (User::where('name',$name)->count() > 0)
+                {
+                    return back()->withErrors('用户名称已被占用 请换一个再试');
+                }
+                $user->name = $name;
+            }
+
+            if ($request->file('avatar'))
+            {
+                $path = $request->file('avatar')->storePublicly($user->id);
+                $user->avatar = "/storage/".$path;
+            }
+
+            $user->save();
+
+
+            // 跳转
+            return back();
+
+
+
+
+
+
+

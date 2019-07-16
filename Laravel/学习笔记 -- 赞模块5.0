@@ -1,0 +1,28 @@
+点赞模块
+    赞表设计
+        表设计 自增id、用户id、文章id、点赞时间、修改时间
+        模型  php artisan make:model
+            使用模型实现赞页面的逻辑的实现
+                大致流程
+                1. 首先创建zan模型
+                2. 因为是在 index/show中 所以需要用到posts模型 所以posts继承zan(\App\Zan::class)
+                3. 在posts模型中的zan 主要负责查看当前的文章有没有被赞过(zan(\Auth::id())->exists())，然后正确的显示出赞的状态
+
+                4. 当点击点赞之后 访问 posts/zan 方法
+                5. 方法中有$zan = new Zan(); $zan::firstOrCreate($param); 目的是在执行创建一条点赞数据之前会判断一下有没有点过赞的状态
+
+                6. 取消赞 $posts->zan(\Auth::id())->delete(); 删除当前文章当前用户的这一条点赞记录
+
+    页面搭建
+
+    业务逻辑
+        赞按钮
+            进行一个判断 之后显示出赞的具体状态
+        文章赞总数
+            使用withcount() 去获取列表的喜欢数和总体的赞数
+               $posts = Posts::orderBy('created_at','desc')->withCount(['comments','zans'])->paginate(6);
+            列表展示同步
+
+
+
+

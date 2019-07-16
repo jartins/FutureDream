@@ -1,0 +1,76 @@
+Beanstalkd 消息队列
+	Beanstalked是一个轻量级的 高性能的分布式内存队列
+
+	常用的队列服务 RabbitMQ、kafka
+
+	队列的特性是：先进先出
+
+	队里的应用场景
+		1、异步处理(最重要): 比如说注册时对与注册成功之后可以立即返回注册成功页面，之后将客户的端口监听队列 达到异步的效果 提高整体的响应速度
+		2、系统解耦
+		3、定时任务：对于新上线的产品，可以运用beanstalkd来做马甲，增添定时的内容发表及点赞
+
+	运行模式：生产者与消费者 
+
+	Beanstalked特性：1.优先级(priority)插队、
+					2.延迟(delay)定时任务或指定时间之后才可以读取队列
+					3.持久化(persistent data)-》通过beanlog日志文件存储信息
+					4.预留(buried)可以将某个数据设置成预留 等到时机成熟时再拿出
+					5.任务超时重发(time-to-run)消费者必须在指定的时间之内处理完这个业务 否则就人物消费者处理失败了
+
+	Beanstalked的核心元素：	
+					1.tube(管道)：就好比排队的通道 beanstalked可以创建多个管道 进而可以定义不同管道的应用场景 和 特性。
+					2.job（任务）
+
+	Beanstalked的任务状态：
+		小结：任务在进入管道到离开管道一共有五个状态
+													=>delete
+		job 	=> 	   ready 	 => 	reserved	=>buried  || => ready
+			↘️		 ↗️								=>delayed
+			  delayed是延迟的 						=>ready
+
+		释义：ready	是准备好了随时可以给消费者读取
+			 delayed是延迟的 在放入管道时就有延时的秒数
+			 delete	是删除
+			 buried	是预留 待条件成熟之后再次使用 再次ready
+
+
+Beanstalked 与 pheanstalk 类
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

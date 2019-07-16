@@ -1,0 +1,89 @@
+Laravel的核心思想
+    1、服务容器
+        容器概念：是一个个在Laravel的实例对象(比如PHPmail,放入mail类的过程叫绑定，获取叫处理或解析)
+        为什么要使用容器？   是因为IOC的控制反转 面向对象的思想 目的是降低计算机代码的耦合度 基本实现思路就是以第三方来实现代码的解耦
+
+        对于一个使用的对象 在进行一次new之后将new的对象用类似的标识符放入容器 等到之后再去使用就直接取出 而不用再去new 取出的过程就是解耦的过程。
+        而担当使用的A的对象已经被new且在容器中时，此时需要B的对象 而B的过程能被A解耦 就直接可以将容器中的A标识符修改为B 这个过程需要DI依赖注入思想
+
+        DI依赖注入就是将实例传入到对象中去
+            就相当于$this->request() 我们就用了依赖注入的思想
+
+        绑定：使用 bind 或者 singleton
+            $this->app->bind('helpspot\API',function($app){
+                return new HelpSpot\API($app->make('helpspot')
+            })
+            $this->app->singleton('helpspot\API',function($app){
+                return new HelpSpot\API($app->make('helpspot')
+            })
+
+        解析：
+            $api = $this->app->make('HelpSpot\API');
+
+        Laravel 的 容器代码地址 \bootstrap\app.php
+
+        依赖注入：只要在函数的参数里加入一个类，它自然就会在这个类似加入这个实例
+
+
+    2、服务提供者
+        概念：
+
+        服务提供注册：public function register()   /  public function boot()
+         register()在所有服务提供之前注册             boot()所有服务加载之后提供
+
+        延迟提供服务：conf/app.php 有非常多的providers(服务提供者) 分配置文件的服务提供与框架本身的服务提供
+         protected $defer = true
+
+
+    3、门脸模式
+        public function index()
+        {
+            $params = \Request::all()
+        }
+
+        可以不用依赖注入的思想 直接 \Request::all()
+        对应的是配置文件中的 app.php aliases
+        比如Request有一个函数 那就是 getFacedeAccessor()
+
+
+
+    4、技巧-如何查找门脸及注入类方法（如何查找一个门脸或注入类有哪些函数）
+        门脸类： app('request');
+        注入类： app('Sysfony\component\HttpFounction\Request')
+
+        使用tinker查找 、 PHPstorm查找、 laravel.com/api/5.4文档查找
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

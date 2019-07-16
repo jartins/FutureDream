@@ -1,0 +1,41 @@
+需要注意的是laravel 》 5.4 之后的版本 在使用string字符串时，默认为mb4string 对应的是一个字符为4个bytes
+
+表单提交要有三步骤
+    验证、逻辑、渲染
+
+
+
+网站的优化
+
+	在laravel中使用 laravel-debugbar 进行调试 （可以清晰的看到查询运行的次数 查询所用的时间 sql语句 路由 异常 时间线等等）
+
+	debugbar 缺点是 ajax接口形势会打印不了
+
+	如果说使用laravel开发运行慢 是因为数据都是从数据库中查出的 没有合理的运用预加载导致的结果
+
+
+	laravel的预加载 (load with)   load('');   with('')->
+	严格的使用预加载,尽量不要在视图页面执行查询的操作 将查询的内容都在控制器完成
+
+
+Laravel中对于SQL的优化
+	使用DB_listen进行慢sql的查询
+		部署格式
+			Db::listen(function($query)){ 
+				$sql = $query->sql;
+				$bindings = $query->bindings;
+				\Log::debug(var_export('sql'));
+			}
+	也可以使用数据库的慢查询日志
+
+
+
+
+
+
+
+
+
+
+
+

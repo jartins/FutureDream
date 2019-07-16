@@ -1,0 +1,232 @@
+一、如何进行行列或者列行的转换
+
+	行转列的关键是union ,列转行的关键是join
+
+	需要进行行转列的场景
+		报表的设计
+			(假设A表是一行一行的数据 分别是日期对应的销售金额有多行。需要将其转换为一列一列的数据 第一行是日期 第二行是销售金额)
+		汇总的显示
+
+	需求分析
+		将A表结构转至成B 再将B结构转至成C
+		mysql> select a.user_name as 姓名,c.kills as 打怪数 from a join c on a.id = c.user_id;
+		A 	+-----------+-----------+
+			| 姓名     	| 打怪数    	|
+			+-----------+-----------+
+			| 猪八戒    	|        10 |
+			| 猪八戒    	|         2 |
+			| 猪八戒    	|        12 |
+			| 沙僧      	|         3 |
+			| 沙僧      	|         5 |
+			| 孙悟空    	|         1 |
+			| 孙悟空    	|        20 |
+			| 唐僧     	|        10 |
+			| 唐僧      	|        17 |
+			+-----------+-----------+
+			9 rows in set (0.00 sec)
+
+		mysql> select a.user_name,sum(c.kills) from a join c on a.id = c.user_id group by a.user_name;
+		B	+-----------+--------------+
+			| user_name | sum(c.kills) |
+			+-----------+--------------+
+			| 唐僧       |           27 |
+			| 孙悟空     |           21 |
+			| 沙僧       |            8 |
+			| 猪八戒     |           24 |
+			+-----------+--------------+
+			4 rows in set (0.00 sec)
+
+		结果1 使用Cross Join—————交叉连接(类笛卡尔积的方法)
+		mysql> select * from (select sum(c.kills) as '孙悟空' from a join c on a.id = c.user_id and a.user_name='孙悟空' gr    by a.user_name) a cross join (select sum(c.kills) as '猪八戒' from a join c on a.id = c.user_id and a.user_name='猪八戒' group by a.user_name) b cross join (select sum(c.kills) as '沙僧' from a join c on a.id = c.user_id and a.user_name='沙僧' group by a.user_name) c;
+		C	+-----------+-----------+--------+
+			| 孙悟空    	|	 猪八戒  | 沙僧    |
+			+-----------+-----------+--------+
+			|        21 |        24 |      8 |
+			+-----------+-----------+--------+
+			1 row in set (0.00 sec)
+
+		结果2  使用case case when 条件 then 获取结果 end
+		mysql> select sum(case when a.user_name='猪八戒' then c.kills end) as 猪八戒, sum(case when a.user_name='沙僧' then c.kills end) as 沙僧,sum(case when a.user_name='孙悟空' then c.kills end) as 孙悟空 from a join c on a.id = c.user_id;
+		C	+-----------+--------+-----------+
+			| 猪八戒    	| 沙僧  	 | 孙悟空     |
+			+-----------+--------+-----------+
+			|        24 |      8 |        21 |
+			+-----------+--------+-----------+
+			1 row in set (0.00 sec)
+
+	单列转多行场景介绍
+		mysql> select a.user_name,replace(substring(substring_index(mobile,',',a.id),char_length(substring_index(mobile,',',a.id-1))+1),',','') as mobile from tb_sequence a cross join (select a.user_name,concat(mobile,',')as mobile,length(mobile)-length(replace(mobile,',',''))+1 size from a) a on a.id <= b.size;
+
+		mysql> select a.user_name,concat(over,',')as mobile,length(over)-length(replace(over,',',''))+1 size from a;
+			+-----------+--------------------------------------------+------+
+			| user_name | mobile                                     | size |
+			+-----------+--------------------------------------------+------+
+			| 唐僧      	| 213312,31231231,32121312321,               |    3 |
+			| 猪八戒    	| 321324213,3214213,                         |    2 |
+			| 孙悟空    	| 534223423,423523321,3242342342,432423423,  |    4 |
+			| 沙僧      	| 543123124,654654543,                       |    2 |
+			+-----------+--------------------------------------------+------+
+			4 rows in set (0.00 sec)
+
+	SQL: coalesce()函数
+		①用途：
+			将空值替换成其他值
+			返回第一个非空值
+		②表达式：
+			COALESCE是一个函数， (expression_1, expression_2, ...,expression_n)依次参考各参数表达式，遇到非null值即停止并返回该值。如果所有的表达式都是空值，最终将返回一个空值。使用COALESCE在于大部分包含空值的表达式最终将返回空值。
+
+			coalesce(item1,item2,item3)
+			依次判断item值，返回第一个不为null的值，若全为null，则返回null；
+		③实例：
+			mysql> select a.id,a.user_name,a.over,coalesce(b.id,'无') as id,coalesce(b.user_name,'佚名') as 姓名, coalesce(b.over,'无业') as 职业 from a left join b on a.user_name = b.user_name;
+	+----+-----------+-------------------------------------------+------+-----------+--------------+
+	| id | user_name | over                                      | id   | 姓名       | 职业         |
+	+----+-----------+-------------------------------------------+------+-----------+--------------+
+	|  3 | 孙悟空     | 534223423,423523321,3242342342,432423423, | 1    | 孙悟空     | 齐天大圣      |
+	|  1 | 唐僧       | 213312,31231231,32121312321,              | 无   | 佚名       | 无业         |
+	|  2 | 猪八戒     | 321324213,3214213,                        | 无   | 佚名       | 无业          |
+	|  4 | 沙僧       | 543123124,654654543,                      | 无   | 佚名       | 无业         |
+	+----+-----------+-------------------------------------------+------+-----------+--------------+
+	4 rows in set (0.00 sec)
+
+
+
+
+
+
+二、如何生成唯一序列号（常见于票据的生成或者主键的生成）
+		需要使用唯一序列号的场景
+			1.数据库的主键
+				主键选择时 尽可能的要小、唯一不重复
+			2.业务序列号
+				发票、车票、订单
+
+		序列号的生成
+			1. MySQL中	: AUTO_INCERMENT
+			2. SQLServer: IDENTITY/SEQUENCE
+			3. Orale	: SEQUENCE
+			4. PgSql	: SEQUENCE
+
+		如何选择生成序列号的方式
+			1. 优先选择系统提供的序列号选择方式	(缺点是：容易产生空洞、在事物操作插入之后回滚 会占用序列号)
+			2. 在特殊情况下可以使用SQL方式生成序列号
+
+		如何使用SQL语句建立特殊需求的序列号
+			需求：生成订单的序列号，并且订单格式如下
+				YYYYMMDDHHMMSSS。如201807200000002
+			DECLARE v_cnt INT;
+			DECLARE v_timestr INT;
+			DECLARE v_timestr = DATE_FORMAT(NOW(),'%Y%m%d');
+			SELECT ROUND(RAND()*100,0)+1 INTO v_cnt;
+			START TRANSACTION;
+				UPDATE order_seq(timestr,order_sn)+v_cnt WHERE timestr = v_timestr;
+				IF ROW_COUNT() = 0 THEN
+					INSERT INTO order_seq(timestr,order_sn) VALUES(v_timestr,v_cnt);
+				END IF;
+				SELECT CONCAT(v_timestr,LPAD(order_sn,7,0)) AS order_sn
+					FROM order_seq WHERE timestr = v_timestr;
+			COMMIT;
+
+
+			UPDATE order_seq SET order_sn = order_sn + v_cnt WHERE timestr = v_timestr;
+			IF ROW_COUNT() = 0 THEN
+			INSERT INTO order_seq(timestr,order_sn) VALUES(v_timestr,v_cnt);
+			END IF;
+			SELECT CONCAT(v_timestr,LPAD(order_sn,7,0))AS order_sn
+			FROM order_seq WHERE timestr = v_timestr;
+			COMMIT;
+
+
+
+
+三、如何删除重复数据
+	产生数据重复的原因
+		1. 人为原因、如重复录入数据、重复提交 等
+		2. 系统原因、由于系统升级或设计的原因使原来可以重复的数据变为不能重复了。
+
+	如何查询数据是否重复?
+		利用group by和having从句处理
+			sql数据格式显示
+				mysql> select * from a;
+					+----+-----------+-------------------------------------------+
+					| id | user_name | over                                      |
+					+----+-----------+-------------------------------------------+
+					|  1 | 唐僧       | 213312,31231231,32121312321,              |
+					|  2 | 猪八戒     | 321324213,3214213,                        |
+					|  3 | 孙悟空     | 534223423,423523321,3242342342,432423423, |
+					|  4 | 沙僧       | 543123124,654654543,                      |
+					|  5 | 唐僧       | 321321313，321312                         |
+					|  6 | 唐僧       | 321313,32321                              |
+					+----+-----------+-------------------------------------------+
+					6 rows in set (0.00 sec)
+			1. 处理方式
+				采用Group by 与 Having 查看数据是否重复
+				Having解释： 如果需要对组函数的结果作为条件，那么不能使用where子句，必须使用having子句。
+
+			写法1.(查看重复数据的数量)
+				mysql> select user_name,count(*) from a group by user_name having count(*) > 1;
+					+-----------+----------+
+					| user_name | count(*) |
+					+-----------+----------+
+					| 唐僧       |        3 |
+					+-----------+----------+
+					1 row in set (0.00 sec)
+
+			2. 删除简单重复数据，对于相同数据保留ID最大的
+				第一步：
+					mysql> select user_name,count(*) as 出现次数,max(id) as id from a GROUP BY user_name having count(*) > 1 ;
+						+-----------+--------------+------+
+						| user_name | 出现次数      | id   |
+						+-----------+--------------+------+
+						| 唐僧       |            3 |    6 |
+						| 孙悟空     |            2 |    7 |
+						+-----------+--------------+------+
+									2 rows in set (0.00 sec)		
+
+				第二步：
+					mysql> delete a from a join(select user_name,count(*),max(id) as id from a GROUP BY user_name having count(*) > 1) b on a.user_name = b.user_name where a.id < b.id;
+						Query OK, 3 rows affected (0.00 sec)
+
+					mysql> select * from a;
+						+----+-----------+-----------------+
+						| id | user_name | over            |
+						+----+-----------+-----------------+
+						|  6 | 唐僧       | 321313,32321    |
+						|  7 | 孙悟空     | 321,321321      |
+						|  9 | 沙僧       | 423434,32432432 |
+						| 10 | 猪八戒     | 24324,43243223  |
+						+----+-----------+-----------------+
+									4 rows in set (0.00 sec)
+
+			3. 删除复杂重复数据
+				mysql> select * from a;
+							重复的数据在 over列中的321
+					+----+-----------+----------------+
+					| id | user_name | over           |
+					+----+-----------+----------------+
+					|  6 | 唐僧       | 321,32321      |
+					|  7 | 孙悟空     | 321,321321     |
+					|  9 | 沙僧       | 423434,321,321 |
+					| 10 | 猪八戒     | 24324,43243223 |
+					+----+-----------+----------------+
+					4 rows in set (0.00 sec)
+
+				删除某个列中的重复数据
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

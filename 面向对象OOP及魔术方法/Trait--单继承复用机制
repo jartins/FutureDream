@@ -1,0 +1,95 @@
+Trait
+	PHP是单继承语言 PHP的类是无法同时从两个基类继承属性和方法的 从php5.4之后就有了Trait关键字 Trait是PHP单继承语言准备的代码复用机制 
+	代码实例				trait是允许嵌套的
+		trait Bt{
+
+			public function atest()
+			{
+				echo "hello";
+			}
+			public function btest()
+			{
+				echo "word";
+			}
+			public function ab()
+			{
+				$this->atest();
+				$this->btest();
+			}
+		}
+
+		class Test{
+			use Bt;
+		}
+
+		$test = new Test();
+		$test->ab();				// 输出的结果是hello word
+
+
+			class Tmp{			=> 再添加一个类
+				use Bt;
+			}
+
+			$test = new Tmp();
+			$test->ab();				// 输出的结果是hello word
+
+	↓↓↓↓↓↓↓ =========== 复用+ =========== ↓↓↓↓↓↓↓
+
+		trait A{
+			public $abc = 'abc';
+
+			function a(){
+				echo "hello ";
+			}
+		}
+
+		trait B{
+			function b(){
+				echo "world";
+			}
+		}
+		/**
+		*	trait C{
+		*		use A,B
+		*	}
+		*/
+
+		class Resum{
+			use A,B;
+				/**
+				*	use C
+				*/
+			function C(){
+				echo "......";
+					echo $this->abc;
+			}
+		}
+
+		$result = new Resum();
+		$result->a();
+		$result->b();
+		$result->c();		// 返回结果将会是 ...... 与 abc
+
+
+	在PHP中有一个特点就是只支持单继承 定义多个trait之后在类中use trait就可以调用里面的方法了。这就解决了PHP单继承的问题。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

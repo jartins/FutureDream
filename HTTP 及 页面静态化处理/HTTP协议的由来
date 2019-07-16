@@ -1,0 +1,125 @@
+抓包 fiddler
+	使用方法：
+
+HTTP协议的由来
+	TCP/IP协议的子集
+	基于信息共享得来的
+
+HTTP协议的应用场景
+	web server、WSDL、小偷程序、采集、爬虫、图片防盗链
+		WSDL 指网络服务描述语言 使用 XML 编写 是一种 XML 文档
+
+HTTP通信原理
+	客户端向web服务器发送一个 ----“请求”---》 	表示获取某个数据
+	客户端 				《---“响应”---- 		服务器
+
+	无状态的特点 请求 连接 断开
+
+
+HTTP协议的基本组成
+	报文首部
+	空行 CR + LF
+	报文主体
+
+		报文：用于HTTP协议交互的信息
+		请求行：包括请求的方法，URL和HTTP协议版本
+		状态行：包括响应结果的状态码，状态描述和HTTP版本
+		首部字段：包括请求和响应的各种条件和属性值（键值对
+
+
+
+模拟表单提交方式
+
+	1. file_get_contents()模拟表单提交
+		file_get_contents(path,include_path,context,start,max_length)
+			参数				描述
+			path			必需。规定要读取的文件。
+			include_path	可选。如果也想在 include_path 中搜寻文件的话，可以将该参数设为 "1"。
+			context			可选。规定文件句柄的环境。
+				context 		是一套可以修改流的行为的选项。若使用 null，则忽略。
+			start			可选。规定在文件中开始读取的位置。该参数是 PHP 5.1 新加的。
+			max_length		可选。规定读取的字节数。该参数是 PHP 5.1 新加的。
+
+		模拟表单提交示例代码
+			$postData = array(
+				"title"		=>	"我是file_get_contents构造的数据",
+				"content"	=>	"我是file_get_contents构造的数据内容",
+				"publish"	=>	"发布",
+			);
+			
+			$postData = http_build_query($postData);
+
+			$opts = array(
+				"http" => array(
+					"method" => "POST",
+					"header" => "Host:localhost\r\n".
+						"Content-type:application/x-www-form-urlencoded\r\n".
+						"Content-length:".strlen($postData)\r\n".
+					"content" => $postData,
+				)
+			);
+
+			$context = stream_context_create($opt);
+			file_get_contents("http://localhost/http/index.php",false,$context);
+
+	2. fopen
+		末尾 $fp = fopen("http://localhost/http/index.php","r",false,$context);
+		fclose($fp);
+
+	3. curl
+		curl_init() 	打开
+		curl_setopt()	设置curl的传输选项
+		curl_exec()		执行
+		curl_close()	关闭
+
+		示例代码
+			$ch = curl_init();
+			curl_setopt($ch,CURLOPT_URL,$url);
+			curl_setopt($ch,CURLOPT_POST, 1);
+			curl_setopt($ch,CURLOPT_POSTFILEDS,提交数组);
+			
+			curl_setopt($ch,CURLOPT_RETRUNTRANSFER, 1);
+			成功之后返回字符串
+			$output = curl_exec($ch);
+			curl_close($ch);
+			echo $output;
+
+	4. socket方式
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+

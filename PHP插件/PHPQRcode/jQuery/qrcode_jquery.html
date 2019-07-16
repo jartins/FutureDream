@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>jQuery生成二维码</title>
+	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+	<div id="qrcode"></div>
+</body>
+	<script src="jquery.qrcode.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		$('#qrcode').qrcode("this plugin is great");
+		$('#qrcode').qrcode({width: 64,height: 64,text: "size doesn't matter"});
+	</script>
+</html>

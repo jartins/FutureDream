@@ -1,0 +1,61 @@
+August-first：	elasticsearch
+				断点续传
+				crontab
+				
+
+August-second：	redis
+
+索引
+
+August-third：	memcache
+
+http
+
+August-fourth：	接口安全、数据传输加密、session共享、sso单点登录、负载均衡、动静分离
+
+
+代码开发中多用设计模式
+
+cgi fastCGI php-fpm
+
+设计模式
+
+
+
+文件操作函数
+date函数操作
+tcp 什么是无状态协议
+
+阈值 
+
+GD库 gdgraph
+
+
+php 缓存之 APC 和apcu
+
+php操作数据库有 mysql mysqli pdo
+
+
+
+
+pdo关于查询
+$stmt = $db->query('SELECT * FROM table');
+
+    while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo $row['field1'];
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

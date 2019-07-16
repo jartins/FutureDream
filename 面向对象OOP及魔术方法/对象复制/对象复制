@@ -1,0 +1,102 @@
+
+对象复制
+	浅拷贝：地址传递(只有途径) 比较省内存
+
+	深拷贝：值传递(用于了实体)
+
+	PHP中对象的复制是浅拷贝的，是地址传递指向同一块内存同一个值(所以改变里面任何一个值也会改变整体的值	)
+	普通类型的变量是深拷贝的 变量之间是通过复制值来实现的
+	要是想实现对象为复制为深拷贝就可以使用clone
+
+	代码示例
+		class A{
+			public $age = 0;
+			public $username = "";
+
+			// 对象属性
+			public $obj = null;
+		}
+		$a = new A();
+		$b = clone $a;	// 在没有使用clone时 是浅拷贝 使用之后就是深拷贝
+		$b->age = 1;
+		var_dump($a->age);	// 输出结果为1
+
+
+		class A{
+			public $age = 0;
+			public $username = "";
+
+			// 对象属性
+			public $obj = null;
+
+			public function __clone(){
+				$this->obj = clone $this->obj;
+			}
+		}
+		class B{
+			public $sex = 0;
+		}
+
+		$a = new A();
+		$a->obj = new B();
+		$b = clone $a;				// 调用魔术方法
+		$b->obj->sex = 1;
+		var_dump($a->obj->sex);		// 输出 0
+		
+
+类型约束
+	PHP作为弱类型语言但并不代表没有类型 PHP7已经是支持类型了
+	代码实例
+		class Test{
+			public $num = "";
+			public function go(){
+				echo "gogo... ...";
+			}
+		}
+
+		function test(A $a)
+		{
+			$a->go();
+		}
+		test(new A());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,101 @@
+评论模块
+    评论表
+        表设计
+            localhost:laravel54 googol$ php artisan make:migration create_comments_table
+                Schema::create('comments', function (Blueprint $table) {
+                    $table->increments('id');
+                    $table->integer('user_id')->default(0);
+                    $table->integer('post_id')->default(0);
+                    $table->text('content');
+                    $table->timestamps();
+                });
+
+        模型
+            模型关联
+                需要了解的是
+                    一对一     hasOne          用户 - 手机号
+                    一对多     hasMany         文章 - 评论
+                    一对多反向  belongsTo       评论 - 文章
+                    多对多     belongsToMany   用户 - 角色
+                    远程一对多  hasManyThrough  国家 - 作者 - 文章   【国家 - 文章】
+                    多态关联    morphMany       文章/视频 - 评论     【评论的一个标识符】
+                    多态多对多  morphology      文章/视频 - 标签
+
+                步骤1. 创建comment评论的模型
+                步骤2. 在posts文章中加入评论的模型
+                    // 评论模型
+                    public function comments()
+                    {
+                        return $this->hasMany('App\Comment')->orderBy('reated_at','desc');
+                    }
+                步骤3. 在comment模型中加入一对多的反向
+
+
+
+
+
+    页面搭建
+        使用路由和模版搭建评论页面
+
+    业务逻辑
+        增加评论
+            创建评论思路
+            创建comment模型
+                public function post()
+                {
+                    return $this->belongsTo('App\Posts');
+                }
+                一对多反向
+
+            在posts模型添加
+                // 评论模型
+                public function comments()
+                {
+                    return $this->hasMany('App\Comment')->orderBy('created_at','desc');
+                }
+                dd($posts->comments()); 实现当前评论的文章
+
+
+        评论列表
+            模型关联预加载
+                $books = App\Book::with('author')->get();
+                $books->load('author','publisher');
+
+            模板
+                评论的具体实现需要在 Comment 模型中加入对于文章的内容查询
+                    // 评论所属用户
+                    public function user()
+                    {
+                        return $this->belongsTo('\App\User');
+                    }
+
+                至于评论的人员 需要在Comments中做一个一对多的反向
+                    // 关联用户
+                    public function user()
+                    {
+                        return $this->belongsTo('App\User');
+                    }
+
+
+        评论数
+            使用withCount实现评论数
+                $posts = App\Posts::withCount('comments')->get();
+            代码逻辑
+                $posts = Posts::orderBy('created_at','desc')->withCount('comments')->paginate(6);
+                视图：{{$value->comment_count}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,74 @@
+注册器模式
+	用来将一些对象 注册到我们全局的树上面 他就可以让任何地方直接去访问 注册器模式一般只提供一个set(注册到全局的注册树上)与一个_unset get获取
+		{相对于单例模式与工厂模式 不用每次都去调用}
+
+	class Register{
+		private static $object;
+		static function set($alias, $object){
+			self::$object[$alias] = $object;
+		}
+
+		static function get($name){
+			return self::$object[$name];
+		}
+
+		function _unset($alias){
+			unset(self::$object[$alias]);
+		}
+	}
+
+	将工厂模式与注册模式结合起来
+	场景：原本工厂模式获取到了单例模式连接数据库的实例对象之后，可以将数据库的对象映射到注册树上（映射时如下 起一个别名） 
+	class Factory{
+		function static createdatabase(){
+			$db = Database::getInstance();
+			Register::set('别名db1',$db);
+			return $db;
+		}
+	}
+		↑↑↑↑↑↑↑↑↑   这样的话工厂的构造只需要构造一次 其他任何地方想要再调用数据库对象的时候我们不需要调用工厂方法也不需要调用单例模式获取实例 而是直接在注册器上(拿这个对象↓↓↓↓↓↓↓)
+	anyone.php
+		$db = \namespace\Register::get('db1');
+
+		补充 ： 在什么时候卸载 可以在环境初始化的时候解决
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

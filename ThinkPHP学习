@@ -1,0 +1,482 @@
+目录结构
+/
+	application
+		command.php 	命令行
+		config.php		通用的配置文件
+		common.php		公共文件 可以添加全局的函数
+		database.php 	数据库配置
+		route.php		路由配置/路由的美化
+		tags.php		应用行为扩展文件，有很多钩子 可以对框架进行扩展而不用修改框架的源码 在钩子上注册行为或函数 改变框架的执行流程
+
+	extend				//下载第三方的库所使用的
+
+	public
+		robots.txt		搜索引擎爬虫文件 给搜索引擎看的（可以定义某一些URL可以被搜索引擎爬取 某些不可以） 比如说后台的连接是不希望 不可以被爬取得
+		router.php		框架快速启动的测试文件，比如本地只有PHP没有apache 可以通过PHP内置的webserver来启动框架	
+			启动命令	php -S localhost:8888 router.php 				浏览器访问 localhost:8888
+
+
+thinkphp5目录和文件开发规范
+	所有的目录名称必须是小写
+	类文件采用驼峰 首字母大写
+	类中的属性/方法 采用驼峰首字母小写的方式
+	定义常量采用全部大写 下划线连接
+	数据库名称的定义必须全部是小写 并且不能以下划线开头 		其中可以用下划线分割
+
+
+thinkphp5 的模块设计
+	application / common 是thinkphp默认的一个公共的模块 它不允许我们通过地址栏直接去访问common模块 所以我们需要将common/controller/index.php use 到可以访问的admin或者index模块下的可执行控制器中使用它 
+	use app\common\controller\index as commonIndex; 
+	$result = new commonIndex();   		return $result->index();
+
+	创建common模块的好处是能够提高代码的复用性质 低耦合
+
+
+thinkphp5 惯例配置
+	在创建时 推荐删除application之下的所有文件 将config文件夹创建在application同级目录 用dump打印config()的助手函数	因为删除了application之下的所有的文件 包括数据库的连接 各级目录的数据配置 此时打印出的所有配置文件都是来自于 Think/conversion.php 的源码 配置文件
+	在public/index.php入口文件中定义常量	define('CONF_PATH', __DIR__.'/../conf/');
+
+
+thinkphp5 应用配置
+	在conf/创建config.php配置文件 
+	在config.php文件中配置的数据项 如果想修改 可以在config.php中再创建一个 直接覆盖（运用 array_merge()）
+
+
+thinkphp5 扩展配置
+	之所以运用扩展配置是因为 在后续项目开发或维护中 需要扩展的东西很多 最后会导致配置文件巨大 所以要用扩展配置
+	在conf/创建extra文件夹/创建配置文件 文件名称会将称为配置项的键
+	在conf/	 || conf/extra	下 创建database.php数据库配置文件 配置数据库的参数
+
+
+
+thinkphp5 场景配置
+	在不同的环境(家/公司)中使用不同的配置文件 暂不考虑
+
+
+
+thinkphp5 模块配置
+	模块配置是为了给不同模块给定不同的配置项目
+	优点： 模块与模块之间的配置互相不一样
+	根据目录级别分析 conf / 之下的配置都是最去全局的 除非与application目录名称相同 则会起到不同的配置域
+	配置方法
+		方法1. conf / 创建与模块相同的文件夹(名称) / 创建配置文件(如果是默认合并的可以将文件名称改为config.php)
+		方法2. conf / 创建与模块相同的文件夹(名称) / 创建extra文件夹 / 创建文件名等于配置键名的配置文件
+
+
+thinkphp5 动态配置
+	动态配置的含义就是在属于个体的控制器或方法中所单一配置的结果
+	一般在配置时 使用助手函数 config('配置的键名'，'配置的键值', '作用域');	作用域的位置是十分关键的 如果想获取到特定的作用域 可以在读取的时候用 Config::get('配置的键名', '作用域');
+		设置配置 Config::set('配置的键名'，'配置的键值'，'作用域');
+		判断某个配置参数是否存在		Config::has('配置的键名');
+		判断参数存在与否的另一个方法 Config('?username');
+
+
+
+thinkphp5 系统环境变量的配置和使用
+	在PHP中有环境变量$_ENV 在框架application同级创建 .env文件 在此文件中可以继续添加环境变量
+	修改的原因是方便 生产 、开发 、上线环境的切换
+		初次添加可能会失效不显示 需要做的就是在/thinkphp/base.php 中 在 putenv("$name=$val"); 代码下边 
+																加上 
+																$_ENV[$name] = $val;
+																$_SERVER[$name] = $val;
+																这2句话即可
+		获取的方式有两种 一种是 use Think\Env 	Env::get('不用添加前缀')
+					  另一种是	$_ENV['需要添加前缀']
+
+
+Thinkphp5 单入口文件的优势
+	安全监测
+	请求过滤
+
+
+
+thinkphp5 隐藏入口文件
+	添加.htaccess文件 在 public/ 下
+	RewriteEngine On
+	RewriteCond %{REQUEST_FILENAME}	!-d
+	RewriteCond %{REQUEST_FILENAME)	!-f
+	RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
+
+
+
+thinkphp5 入口文件的绑定
+	方法1. define('BIND_MODULE','admin/可以写控制器');如果写了控制器 在地址栏访问只需要写方法就可以了	在入口文件处定义
+	核心！在thinkphp5中开发API 就可以用到入口文件绑定一个规则 规则是可以避免让接口去访问后端模块与前端模块 只允许让其访问api的模块 
+		模块的生成方法是 再另例一个public/api.php一个api的入口文件，在入口文件中进行define('BIND_MODULE','api');
+		api入口的具体写法
+			cp index.php api.php
+			vi api.php
+			绑定模块 define('BIND_MODULE','api')	
+			默认情况下 cp index.php api.php 之后 在application下创建与api名称相同的模块/控制器/方法 可以不用BIND_MODULE 当然也可以BIND_MODULE
+
+
+
+thinkphp5 路由
+	路由的配置需要将配参数添加到public/conf中 开启
+		开启的是 url_route_on => true,[使用路由]   url_route_must => true [强制使用路由]	
+			之前访问的URL ...index/Index/demo/id/14
+		开启之后创建路由conf/route.php配置 写入 return ['news/:id' => 'index/index/demo']
+			之后访问的路劲可以直接是news/324
+	URL的助手函数 url('index/index/demo',['id'=>21])	可以查看
+
+		如果打开url_route_must => true 需要在conf/route.php中添加 index/index/third => index/index/third
+
+
+thinkphp5 请求对象获取
+	获取的方式有三种
+		第一种 $request = request();		dump($request);
+		第二种 use think/Request 		$request = Request::instance()	单例模式
+		第三种 在方法的形参中添加 		function(Request $request)	前提要use think/Request
+
+
+
+thinkphp5 请求对象参数获取
+	// 获取浏览器输入框的值
+		dump($request->domain());		// 获取到访问的域名
+		dump($request->pathinfo());		// 获取到访问的路径
+		dump($request->path());			// 直接返回访问路径 不返回后缀
+
+		// 请求类型
+		dump($request->method());
+		dump($request->isGet());			
+		dump($request->isPost());
+		dump($request->isAjax());
+
+		// 请求的参数
+		echo "请求的参数.<br/>";
+		dump($request->get());			// get方式获取
+		dump($request->param());		// 获取get所有值
+		dump($request->post());			// post方式获取数据
+		// session('test','wuyunlong');
+		dump($request->session());		// session的获取
+		// cookie('testcook','cookies');
+		dump($request->cookie());		// cookie的获取
+
+		dump($request->param('id'));	// 获取特定的字段
+
+
+		//获取模块、控制器、方法
+		dump($request->module());
+		dump($request->controller());
+		dump($request->action());
+		dump($request->url());	
+		dump($request->baseurl());
+
+
+
+thinkphp5 input助手函数
+	input('name名',如果接不到的默认值,过滤方式intval);
+		助手函数input支持的类型
+			'get', 'post', 'put', 'patch', 'delete', 
+			'route', 'param', 'request', 'session', 
+			'cookie', 'server', 'env', 'path', 'file'
+
+	建议方式是用 function(Request $request){ $request->get('名','默认值','trim') }
+
+
+
+thinkphp5 响应对象 response
+	在Thinkphp中是不建议使用die操作的 可以使用return 的方式打印
+	在thinkphp中 可以使用动态的配置来实现灵活的参数配置
+	完成返回结果参数的类型配置可以使用动态配置 default_return_type => '类型' 返回结果来实现
+		代码实例
+			public function response()
+			{
+				Config::set('default_return_type','json');
+				$res = [
+					'status'=> '200',
+					'data'	=> [
+						1,2,3,4,5,6,7,8
+					],
+				];
+
+				return $res;
+			}
+
+	对于接口中的响应对象的数据返回 需要知道的是 灵活的配置 
+	在conf/创建api/config.php文件 写入'default_return_type' => 'json'这样做会带来一个问题 就是接口返回的参数可能会全部改变了 所以为了能够让接口返回的值按例返回采用url地址栏的独特声名
+		function($type='json'){ if(!in_array($typer,['json','xml'])){$type = 'json';} }
+			use think\config;	Config::set('default_return_type','json')
+		访问地址加?type=数据类型 可以单独的声名数据类型 默认返回json
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+thinkphp5 视图
+	视图的基本配置方法是 return 
+	在view(第一个是渲染的文件名，第二个是数组形势的渲染值，第三个是数组形势且下标为STATIC的可替换的值)
+
+	渲染方法1. view()
+	return view('views',['data'=>'我是assign的数据'],['STATIC'=>'我是可以替换的数据']);
+
+		<h1>这里是views</h1>
+		<p>{$data}</p>
+		<p>STATIC</p>
+
+	在继承use think\Controller     extends Controller
+	渲染方法2. fetch()
+	return fetch('views',['data'=>'我是assign的数据'],['STATIC'=>'我是可以替换的数据']);
+
+	渲染方法3. display() 无需view下的文件支持 建议api 缺点是维护性不高
+	$this->assign('file','文件')
+	return display('这是一个{$data}{$file}',['data'=>'视图'])
+
+
+
+thinkphp 变量赋值、输出、替换
+	变量的输出 在thinkphp中的conversion 中有 template的模板配置 其中tpl_begin与tpl_end是规定解析左右的
+	如果在使用了bootstrap或vue很可能会造成读不了 所以 可以通过改变变量输出的tpl来规避这样情况的发生
+
+	替换功能的使用方法是在conversion中的 view_replace_str => [替换的key与替换的值] 在视图中出现的所有替换的key 都将会替换为替换的值
+
+	thinkphp中提供了一些常量 
+		<p>__URL__</p>
+		<p>__JS__</p>
+		<p>__CSS__</p>
+		<p>__STATIC__</p>
+		<p>__ROOT__</p>		使用了这些的优点是修改文件放置的目录后 可以搭配替换的配置文件来完成替换的操作 达到修改1:N
+
+	也可以自己在替换的位置自定义一个__UPLOAD__方法 自定义上传的路径或文件名称
+
+
+
+thinkphp 系统变量 原生标签
+	在view中获取环境变量的方法
+		<p>{$Think.server.HTTP_HOST}</p>
+		<p>{$Think.env.PHP_EMAILS}</p>
+		<p>{$Think.session.test}</p>
+		<p>{$Think.cookie.test}</p>
+		<p>{$Think.get.id}</p>
+		<p>{$Think.request.id}</p>
+		<!-- <p>{$Think.post.id}</p> -->
+		<p>{$Think.const.APP_PATH}</p>
+		<p>{$Think.APP_PATH}</p>
+
+
+
+thinkphp 变量输出 调节器
+	title 	1. 管道符加密 转换 
+			2. 运算
+			3. thinkphp中的注释 {/**/} 可以隐藏 予以代码很好的隐私保护措施
+		<p>{$data}md5加密之后:{$data|md5}</p>
+
+		<p>{$time}时间转换格式：{$time|date="Y-m-d h:i:s",###}</p>
+
+		<p>{$data}加密：{$data|md5} 之后再次进行转大写：{$data|md5|strtoupper}</p>
+
+		<p>a+b={$a+$b}</p>
+		<p>a*b-c={$a*$b-$c}</p>
+		<p>--a={--$a}</p>
+		<p>++a={++$b}</p>
+		<p></p>
+
+		<p>{$emails|default='23432@qq.com'}</p>
+		{literal}
+		<p>{$data}</p>
+		{/literal}
+		
+		<!--这里是注释页面-->
+		{/*thinkphp的注释12*/}
+
+
+
+
+thinkphp 模板循环标签
+	循环标签有三种
+	第一种 {volist name='' id='val' key='key'}
+	第二种 {foreach name='' key='' item=''}
+		  {foreach $list as $val}
+	第三种 {for name='名' start='' end='' step=''}
+			<body>
+			<!-- volist -->
+			name 	是页面渲染的变量名
+			id 		是定义val
+			offset 	是开始便利的位置
+			length 	是页面总体的遍历总长度
+			mod 	是取余
+			key 	代表当前循环的次数
+			<p>{volist name="list" id="vo" offset='' length='3' mod='2' empty="$emptys" key='s'}</p>
+				<p>{$mod}...{$s}</p>
+				<p>{$vo.name} {$vo.email}</p>
+			<p>{/volist}</p>
+
+			<hr>
+			<!-- foreach -->
+			{foreach $list as $val}
+				<p>{$val.name}:{$val.email}</p>
+			{/foreach}
+			<hr>
+			{foreach name="list" key="keys" item="vo"}
+				<p>{$keys}{$vo.name}:{$vo.email}</p>
+			{/foreach}
+			
+
+			<!-- for -->
+			<hr>
+			{for name='k' start='1' end='20' step='3'}
+				<p>{$k}</p>
+			{/for}
+			
+			</body>
+
+
+
+thinkphp5 比较标签
+	{gt}	{lt}	{eq}	{egt}	{elt}
+
+
+
+thinkphp5 条件判断标签
+	{switch}{case value=""}{default}
+
+	{range name='' value='' type='notin | in | between'}
+
+	{bettween name='' value=''}
+
+	{defined name=''}
+
+	{if condition="($) AND|OR ($)"}
+
+	在thinkphp5中判断标签switch
+		模拟获取了get传递的参数id 作为新的数据判断数值
+			{case value="1|2"}<p>金牌会员</p>{/case}
+			加了竖线的value值之后 就类似与或 可供支持的条件是两种
+		{switch name="Think.get.level"}
+			{case value="1"}<p>普通会员</p>{/case}
+			{case value="2"}<p>金牌会员</p>{/case}
+			{case value="3"}<p>钻石会员</p>{/case}
+			{case value="4"}<p>黑卡</p>{/case}
+			{default/}<p>游客</p>
+		{/switch}
+		<div>{switch name="Think.get.level"}
+			{case value="1|2"}<p>金牌会员</p>{/case}
+			{case value="3"}<p>钻石会员</p>{/case}
+			{case value="4"}<p>黑卡</p>{/case}
+			{default/}<p>游客</p>
+		{/switch}
+		</div>
+		<hr>
+		<div>
+			{range name="Think.get.level" value="1,2,3" type="in"}<!-- type="notin | in | between" -->
+				<p>当前的参数是range 范围 1，2，3 中的一个</p>
+			{else/}
+				<p>当前参数不是range 范围 1，2，3中的一个</p>
+			{/range}
+		</div>
+		<hr>
+		<div>
+			{range name="Think.get.level" value="1,4" type="between"}<!-- type="notin | in | between" -->
+				<p>在1~4之间</p>
+			{else/}
+				<p>不在1~4之间</p>
+			{/range}
+		</div>
+		<hr>
+		<div>
+			{between name="Think.get.level" value="1,4"}<!-- type="notin | in | between" -->
+				<p>在1~4之间</p>
+			{else/}
+				<p>不在1~4之间</p>
+			{/between}
+		</div>
+		<hr>
+		<div>
+			{defined name="APP_PATH"}<!-- 判断常量是否定义 -->
+				<p>App path 已经定义过这个常量</p>
+			{else/}
+				<p>还未定义这个常量</p>
+			{/defined}
+		</div>
+		<hr>
+		<div>
+			{if condition="($Think.get.level == 1) AND ($Think.get.id == 10)"}<!-- if判断 AND|OR -->
+				<p>等于1 id=10</p>
+			{else/}
+				<p>不等于1</p>
+			{/if}
+		</div>
+
+
+
+
+thinkphp5 模板布局 包含 继承
+	三种方法引入公共的模板
+		1. 继承
+		2. include
+		3. layout
+	将导航 边栏等公共的视图文件创建common 文件 放入以下的文件中 
+		公共的高频视图可以 在common下创建文件 用 {include file='文件/文件名 没有后缀'/} 引入
+		在视图文件中继承{extend name='common/base' /}
+
+	注意 因为我们在使用公共的文件中可能会出现引用时 某个文件视图有略微的不同 想要使模板个性化的展示 且不破坏整体 我们需要的就是要将数据 在base的公共视图文件中用{block name='识别码 不能重复'} 展示数 {/block}
+					 在继承中个性化的改变 只需要{block name='总base页面挖的坑 进行填坑'} 展示局部修改 {/block}
+	如果在继承页面要将base中的数据上继续添加数据 可以用 {block} {__block__} {/block}
+
+	在使用layout时 我们要在conf/config.php 添加layout = true, layout_name = 'lay名称' 
+		在视图文件下创建与 lay名称一致的文件 放入公共布局的文件(可以是base文件中的) 在layout文件中的公共文件不会将挖坑的数据展示出来 只会将include的页面拉入 还支持 在layout中经常改变的content文件 修改支持为公共可以使用的文件 写为 {__CONTENT__}
+
+
+
+
+
+
+thinkphp 5基础篇 总结
+	三种安装方式：composer、git、download
+
+	惯例配置、场景配置、扩展配置... ...
+
+	config类与config助手函数
+
+	.env 环境变量配置
+
+	单 多入口文件 配置路由 二级路由
+
+	获取get post session cookie
+
+	配置返回参数
+
+	视图内置标签 
+
+	模板布局
+
+
+
+
+关于助手函数的类型转换
+input('get.id/d');
+input('post.name/s');
+input('post.ids/a');
+Request::instance()->get('id/d');
+ThinkPHP5.0版本默认的变量修饰符是/s，如果需要传入字符串之外的变量可以使用下面的修饰符，包括：
+
+修饰符	作用
+s	强制转换为字符串类型
+d	强制转换为整型类型
+b	强制转换为布尔类型
+a	强制转换为数组类型
+f	强制转换为浮点类型
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,79 @@
+文件下载
+	简单的就可以直接使用超链接的 href 属性直接下载(主要下载浏览器不支持的格式 .exe|.rar)
+
+	当下载文件是html时 我们可以使用程序进行下载 通过header发送一些头信息 再读取我们的内容 readfile等操作函数都可以完成对于文件的下载
+
+	实现过程
+		$filename = $_GET['filename'];
+		header('content-disposition:attachment; filename='.basename($filename));	// 告诉浏览器通过附件的形式处理文件
+		header('content-length:'.filesize($filename))	// 文件的大小
+		readfile($filename);							// 读取文件的内容
+
+
+
+
+案例：使用php下载大文件的方法
+	下载一个较大的文件（200M-2G）时，我们服务端应该如何来满足这个服务呢？
+	采用curl函数：下载的文教较大时，就会出现许多错误
+		1、php进程内存溢出
+		2、下载时间过长，nginx没有得到响应，导致nginx向请求端报错（httpcode 504报错）
+		注：在设置CURLOPT_TIMEOUT，需要适当调大一些，这样对应耗时较长的超大文件下载，才不会在中途断开。
+
+
+
+
+
+
+
+
+
+	代码实例及过程
+	核心部分就在最后一个curl_setopt中，可以看到这里配置了CURLOPT_WRITEFUNCTION，紧接着是一个函数，
+	function($ch ,$str) use (&$flag){
+	    $len = strlen($str);
+	    $flag++;
+	    if($flag==1){
+	        $size = \curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+	        $type = \curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+	        $httpcode  = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	        \header("HTTP/1.1 ".$httpcode);
+	        \header("Content-Type: ".$type);
+	        \header("Content-Length: ".$size);
+	        \header('Content-Transfer-Encoding: binary');
+	        \header('Cache-Control:max-age=2592000');
+	    }
+	    echo $str;
+	    return $len;
+	}
+	这个函数就是之前讲到的回调函数。
+	该函数需要传入两个参数，也就是上面提到的，cURL资源，以及字符串。curl资源不必赘述，着重说一下字符串$str。
+	当程序执行到\curl_exec($ch);处时，整个curl网络请求就开始了，当请求端的数据到达我们服务端的那一刻，数据会被放入一个缓冲区，由于是大文件，所以数据会源源不断的持续到达，当缓冲区收到一定数量的返回值后，就会调用这个回调函数，并将返回得到的数据传入这里的$str变量。我们获取这个$str变量，并将它echo就可以瞬时发送给nginx响应，nginx拿到响应数据，立即会返回到客户端，这样就能很好的解决上面提到的两个致命缺陷，1、php进程内存消耗不会持续增加，2，nginx不会响应超时。回调函数的末尾有一个return $len; 这里的$len是$str的长度；我们需要返回这个长度，也就是之前提到的，必须写入确切的字符串。其实也很好理解，我们将字符串的长度抛出，下一次调用回调函数时，才能正确定位接下来该从哪里传值。
+	另外，我加入了一个flag作为标记，通过use(&flag)的方式（有点类似于c语言中的引用），可将flag作为变量，并在函数中不断累加，起到标记作用。当flag为1时，我们尝试去获取http的返回头，拿到响应码，文件类型，文件长度，然后进行拼接成我们想要返回给客户端的http响应头信息，这里还加上了缓存时间\header('Cache-Control:max-age=2592000');方便请求端做缓存过期策略。
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

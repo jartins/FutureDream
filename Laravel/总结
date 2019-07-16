@@ -1,0 +1,115 @@
+Laravel
+	
+
+主要区别:(thinkPHP更适合国人的编码习惯)
+	1.渲染模版方式的不同:
+		在Laravel框架里,使用return view()来渲染模版;
+	2.在Laravel框架里,由于其考虑到了跨站请求伪造,所以如果使用form表单以post方式进行传值时,如果不再form表单中加入{{csrf_field()}};
+	3.Laravel是一个重路由的框架(5.4)
+	4.laravel具有强大的Blade模版引擎;Laravel框架里 if else判断语句和foreach语句 书写时必须以@if开头  以@endif结尾,如果没有则报语法错误,@foreach @endforeach同理;
+	5.Laravel内置了大量的验证方法,例如 validate数据校验、策略类-policy用户授权
+
+
+
+
+
+
+
+	https://laravel.com
+	https://laravel-china.org
+
+	1、数据库迁移
+	2、数据填充
+	3、模型关联建立
+		4、elasticsearch全文检索引擎服务搭建使用
+		5、基于数据库的异步队列操作
+		6、如何设计表格更符合laravel的默认约定
+	7、如何理解laravel的依赖注入容器等思想
+		8、如何设计权限管理系统
+	9、如何使用laravel控制用户权限
+
+
+	Thinkphp 拥有 php think 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	1. 数据库迁移			概念:使用artisan工匠
+		创建数据库迁移文件 						
+		
+		修改迁移文件		up 运行迁移时的文件、 down 回滚迁移时的文件	
+			(修改数据表名或者修改数据表字段时，就需要使用到MySQL ALTER命令。)			
+
+		运行迁移文件 							php artisan migrate
+
+
+	2. 数据填充
+		数据填充采用第三方类库实现 https://github.com/fzaninotto/Faker
+		使用需要用到工厂模式绑定参数 database/factories/ModelFactory.php
+			生成 + 入库
+                >>> factory(App\Posts::class, 10)->make();  // 生成
+                >>> factory(App\Posts::class, 10)->create();// 入库
+
+
+	3. 模型关联建立
+		tinker 的使用
+		tinker是一款和应用程序的插件
+
+
+	4. 容器 门脸类 依赖注入
+		依赖注入：只要在函数的参数里加入一个类，它自然就会在这个类似加入这个实例 
+
+		容器（Container）实现类的统一管理，确保对象实例的唯一性。
+
+		门面（Facade）为容器（Container）中的类提供了一个静态调用接口，相比于传统的静态方法调用， 带来了更好的可测试性和扩展性，你可以为任何的非静态类库定义一个facade类。
+
+
+	6. blade模板 验证三步骤
+		使用blade模板
+			.blade.php
+	 		模板语法{{}}		@if @endif		@foreach $endforeach
+	 		参数传递 //$posts[] $arr[]   compact('posts','arr');
+	 		继承模型 extension/ section/ yield/ content
+	 		引入视图 include
+
+
+
+
+
+
+	.env	
+	5.4 之后的版本 在使用string字符串时，默认为mb4string 对应的是一个字符为4个bytes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
