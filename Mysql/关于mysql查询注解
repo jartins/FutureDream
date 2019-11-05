@@ -31,12 +31,19 @@
 
 	HIGH_PRIORITY			优先操作	可以使用在select和insert操作中，让MYSQL知道，这个操作优先进行。
 	LOW_PRIORITY			滞后操作 可以使用在insert和update操作中，让mysql知道，这个操作滞后。
-	INSERT DELAYED			延时插入	是客户端提交数据给MySQL，MySQL返回OK状态给客户端。而这是并不是已经将数据插入表，而是存储在内存里面等待							排队。当mysql有空余时，再插入。另一个重要的好处是，来自许多客户端的插入被集中在一起，并被编写入一个块。这比执行							许多独立的插入要快很多。坏处是，不能返回自动递增 的ID，以及系统崩溃时，MySQL还没有来得及插入数据的话，这些数据将会丢失。
+	INSERT DELAYED			延时插入	是客户端提交数据给MySQL，MySQL返回OK状态给客户端。
+						而这是并不是已经将数据插入表，而是存储在内存里面等待排队。
+						当mysql有空余时，再插入。另一个重要的好处是，来自许多客户端的插入被集中在一起，
+						并被编写入一个块。这比执行许多独立的插入要快很多。坏处是，
+						不能返回自动递增 的ID，以及系统崩溃时，MySQL还没有来得及插入数据的话，这些数据将会丢失。
 
 	STRAIGHT_JOIN			自定义关联查询的优先级及查询顺序 取消对于mysql本身关联处理顺序的依赖
 							示例SQL语句  sel * from a STRAIGHT_JOIN  b on a. = b. ;
 
-	SQL_SMALL_RESULT        使用了sql_small_result选项，mysql会用到in-memory临时表。（sql_small_result与sql_big_result是一对相对的关键次，必须与group by distinct 一起使用，sql_small_result告知优化其结果会很小让mysql使用临时表而不适用排序）。
+	SQL_SMALL_RESULT        使用了sql_small_result选项，mysql会用到in-memory临时表。				
+					（sql_small_result与sql_big_result是一对相对的关键次，必须与group by distinct 一起使用，
+					sql_small_result告知优化其结果会很小让mysql使用临时表而不适用排序）。
+					
 	SQL_BUFFER_RESULT 		在查询语句中，将查询结果缓存到临时表中。
 
 	SQL_CALC_FOUND_ROWS		KEY `bar` (`bb`,`aa`) 使用覆盖索引时 查询的效率 比count高
